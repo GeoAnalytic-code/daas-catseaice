@@ -11,15 +11,27 @@ import pickle
 import random
 from scrapers import gogetcisdata, gogetnicdata, parse_htmlform_files, get_vector_stats
 
+nic_pickle = 'nicfiles.pkl'
+
+
+def pickle_nic_files():
+    """ query the NIC site and store all results in a pickle file for later use """
+    t = gogetnicdata()
+    pickle.dump(t, open(nic_pickle, 'wb'))
+    return len(t)
+
+
 def load_nic_test():
-    x = pickle.load(open('nicfiles.pkl', 'rb'))
+    x = pickle.load(open(nic_pickle, 'rb'))
     return x
 
-def nic_samples(k = 1):
+
+def nic_samples(k=1):
     """ return a random sample (size = k) of the NIC data """
     return random.sample(load_nic_test(), k)
 
-def get_some_stats(k = 200):
+
+def get_some_stats(k=200):
     """ get a big set of stats for NIC files """
     x = nic_samples(k)
     stats = []
