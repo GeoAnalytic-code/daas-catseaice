@@ -21,31 +21,22 @@
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
 [![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
 
 
-<!-- PROJECT LOGO -->
 <br />
 <p align="center">
-  <a href="https://github.com/GeoAnalytic-code/daas-catseaice">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
-  </a>
 
-  <h3 align="center">project_title</h3>
+  <h3 align="center">DaaS-CatSeaice</h3>
 
   <p align="center">
-    project_description
+    Publish static STAC catalogs for weekly Ice Charts as published by the National Ice Center and Canadian Ice Service.
     <br />
     <a href="https://github.com/GeoAnalytic-code/daas-catseaice"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/GeoAnalytic-code/daas-catseaice">View Demo</a>
-    ·
     <a href="https://github.com/GeoAnalytic-code/daas-catseaice/issues">Report Bug</a>
     ·
     <a href="https://github.com/GeoAnalytic-code/daas-catseaice/issues">Request Feature</a>
@@ -84,19 +75,13 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
-
-Here's a blank template to get started:
-**To avoid retyping too much info. Do a search and replace with your text editor for the following:**
-`github_username`, `repo_name`, `twitter_handle`, `email`, `project_title`, `project_description`
-
-
+This code may be used to generate STAC catalogs of ice charts available on government websites.  Typically, these are provided as ESRI e00 files or Shapefiles in ZIP archives on a weekly schedule.
 ### Built With
 
-* []()
-* []()
-* []()
+* [PyStac](https://github.com/stac-utils/pystac)
+* [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/)
+* [Fiona](https://github.com/Toblerity/Fiona)
+* [Shapely](https://github.com/Toblerity/Shapely)
 
 
 
@@ -124,10 +109,16 @@ To get a local copy up and running follow these simple steps.
 
 <!-- USAGE EXAMPLES -->
 ## Usage
+Fill up the database for the first time:    
+   ```sh
+    filldatabase
+   ```
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+Export a STAC catalog:
+   ```sh
+    exportcatalog
+   ```
 
-_For more examples, please refer to the [Documentation](https://example.com)_
 
 
 
@@ -169,10 +160,9 @@ Project Link: [https://github.com/GeoAnalytic-code/daas-catseaice](https://githu
 
 <!-- ACKNOWLEDGEMENTS -->
 ## Acknowledgements
+A portion of this work was generously supported through the GeoConnections programme, part of Canada's Spatial Data Infrastructure. 
+* [GeoConnections](https://www.nrcan.gc.ca/science-data/science-research/earth-sciences/geomatics/canadas-spatial-data-infrastructure/10783)
 
-* []()
-* []()
-* []()
 
 
 
@@ -180,15 +170,16 @@ Project Link: [https://github.com/GeoAnalytic-code/daas-catseaice](https://githu
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/GeoAnalytic-code/daas-catseaice.svg?style=for-the-badge
+[contributors-shield]: https://img.shields.io/github/contributors/GeoAnalytic-code/daas-catseaice.svg?style=plastic
 [contributors-url]: https://github.com/GeoAnalytic-code/daas-catseaice/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/GeoAnalytic-code/daas-catseaice.svg?style=for-the-badge
+[forks-shield]: https://img.shields.io/github/forks/GeoAnalytic-code/daas-catseaice.svg?style=plastic
 [forks-url]: https://github.com/GeoAnalytic-code/daas-catseaice/network/members
-[stars-shield]: https://img.shields.io/github/stars/GeoAnalytic-code/daas-catseaice.svg?style=for-the-badge
+[stars-shield]: https://img.shields.io/github/stars/GeoAnalytic-code/daas-catseaice.svg?style=plastic
 [stars-url]: https://github.com/GeoAnalytic-code/daas-catseaice/stargazers
-[issues-shield]: https://img.shields.io/github/issues/GeoAnalytic-code/daas-catseaice.svg?style=for-the-badge
+[issues-shield]: https://img.shields.io/github/issues/GeoAnalytic-code/daas-catseaice.svg?style=plastic
 [issues-url]: https://github.com/GeoAnalytic-code/daas-catseaice/issues
-[license-shield]: https://img.shields.io/pypi/pyversions/pystac?style=for-the-badge
-[license-url]: https://github.com/GeoAnalytic-code/daas-catseaice/blob/master/LICENSE.txt
-[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
+[python-shield]: https://img.shields.io/pypi/pyversions/pystac?style=plastic
+[license-shield]: https://img.shields.io/github/license/Geoanalytic-code/daas-catseaice?style=plastic
+[license-url]: https://github.com/GeoAnalytic-code/daas-catseaice/blob/master/LICENSE
+[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=plastic&logo=linkedin&colorB=555
 [linkedin-url]: https://www.linkedin.com/in/david-currie-4a129920/
