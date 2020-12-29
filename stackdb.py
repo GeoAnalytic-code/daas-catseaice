@@ -28,7 +28,7 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 ###############################################################################
-
+import datetime
 import sqlite3
 import json
 from icechart import IceChart
@@ -146,57 +146,44 @@ class StackDB:
         print(query)
         self.cursor.execute(query)
 
-    #######################################################################
-    #
-    ## Function to query any other SQL statement.
-    #
-    #  This function is there in case you want to execute any other sql
-    #  statement other than a write or get.
-    #
-    #  @param sql A valid SQL statement in string format.
-    #
-    #######################################################################
+    def query(self, sql, vars=(), fetch=False):
+        """ execute an arbitrary SQL query
+        if fetch is True, return a list of results """
+        self.cursor.execute(sql, vars)
+        if fetch:
+            return self.cursor.fetchall()
 
-    def query(self, sql):
-        self.cursor.execute(sql)
+    def summary(self):
+        """ return a dict of summary statistics for the items table """
+        ret = {}
+        # total items
+        sql = 'SELECT COUNT(*) FROM items;'
+        ret['Total Items'] = self.query(sql, fetch=True)[0][0]
+        # self.cursor.execute(sql)
+        # ret['Total Items'] = self.cursor.fetchall()[0][0]
 
-    #######################################################################
-    #
-    ## Utility function that summarizes a dataset.
-    #
-    #  This function takes a dataset, retrieved via the get() function, and
-    #  returns only the maximum, minimum and average for each column.
-    #
-    #  @param rows The retrieved data.
-    #
-    #######################################################################
+        # count by source
+        sql = 'SELECT source, count(source), min(epoch), max(epoch) FROM items GROUP BY source;'
+        sct = self.query(sql, fetch=True)
+        # self.cursor.execute(sql)
+        # sct = self.cursor.fetchall()
+        for src in sct:
+            ret[src[0] + ' Count'] = src[1]
+            ret[src[0] + ' Start Year'] = datetime.datetime.strptime(src[2], '%Y-%m-%d %H:%M:%S').year
+            ret[src[0] + ' End Year'] = datetime.datetime.strptime(src[3], '%Y-%m-%d %H:%M:%S').year
 
-    @staticmethod
-    def summary(rows):
-
-        # split the rows into columns
-        cols = [[r[c] for r in rows] for c in range(len(rows[0]))]
-
-        # the time in terms of fractions of hours of how long ago
-        # the sample was assumes the sampling period is 10 minutes
-        t = lambda col: "{:.1f}".format((len(rows) - col) / 6.0)
-
-        # return a tuple, consisting of tuples of the maximum,
-        # the minimum and the average for each column and their
-        # respective time (how long ago, in fractions of hours)
-        # average has no time, of course
-        ret = []
-
-        for c in cols:
-            hi = max(c)
-            hi_t = t(c.index(hi))
-
-            lo = min(c)
-            lo_t = t(c.index(lo))
-
-            avg = sum(c) / len(rows)
-
-            ret.append(((hi, hi_t), (lo, lo_t), avg))
+        # count by region
+        for src in sct:
+            sql = 'SELECT region, count(region), min(epoch), max(epoch) FROM items WHERE source=? GROUP BY region;'
+            rct = self.query(sql, (src[0],), fetch=True)
+            # self.cursor.execute(sql, (src[0],))
+            # rct = self.cursor.fetchall()
+            for rgn in rct:
+                ret[' '.join((src[0], rgn[0], 'Count'))] = rgn[1]
+                ret[' '.join((src[0], rgn[0], 'Start Year'))] = datetime.datetime.strptime(rgn[2],
+                                                                                           '%Y-%m-%d %H:%M:%S').year
+                ret[' '.join((src[0], rgn[0], 'End Year'))] = datetime.datetime.strptime(rgn[3],
+                                                                                         '%Y-%m-%d %H:%M:%S').year
 
         return ret
 

@@ -1,15 +1,9 @@
-# This file may be used to create an environment using:
-# $ conda create --name <env> --file <this file>
-# platform: linux-64
-beautifulsoup4=4.9.3=pyhb0f4dca_0
-click=7.1.2=py_0
-click-plugins=1.1.1=py_0
-fiona=1.8.13.post1=py38hc820daa_0
-gdal=3.0.2=py38hbb2a789_0
-pyproj=2.6.1.post1=py38hd003209_1
-pystac=0.5.3=pyhd3deb0d_0
-pytest=6.2.1=py38h06a4308_0
-python-dateutil=2.8.1=py_0
-requests=2.24.0=py_0
-shapely=1.7.1=py38h98ec03d_0
-
+pytest~=6.2.1
+fiona~=1.8.13.post1
+pyproj~=2.6.1.post1
+shapely~=1.7.1
+pystac~=0.5.3
+python-dateutil~=2.8.1
+requests~=2.24.0
+beautifulsoup4~=4.9.3
+gdal~=3.0.2
