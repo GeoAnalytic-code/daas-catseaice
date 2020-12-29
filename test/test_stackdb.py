@@ -75,3 +75,9 @@ def test_getitems(additems):
     result = db.get_stac_items(region='antarctic')
     assert len(result) == 2
 
+def test_summary(additems):
+    db = additems
+    summary = db.summary()
+    assert summary['CIS Count'] == 2
+    assert summary['NIC End Year'] == 2017
+
