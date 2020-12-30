@@ -45,11 +45,17 @@ def createdb():
 @pytest.fixture(scope='function')
 def additems(createdb):
     db = createdb
-    x = IceChart('rgc_a09_20201214_CEXPRHB',
-                 'https://ice-glaces.ec.gc.ca/www_archive/AOI_09/Coverages/rgc_a09_20201214_CEXPRHB.zip')
+    x = IceChart('rgc_a13_19730102_CEXPRGL',
+                 'https://ice-glaces.ec.gc.ca/www_archive/AOI_13/Coverages/rgc_a13_19730102_CEXPRGL.e00')
     db.add_item(x)
-    x = IceChart('rgc_a11_20161121_CEXPRHB',
-                 'https://ice-glaces.ec.gc.ca/www_archive/AOI_11/Coverages/rgc_a11_20161121_CEXPRHB.e00')
+    x = IceChart('rgc_a10_20071015_CEXPRWA',
+                 'https://ice-glaces.ec.gc.ca/www_archive/AOI_10/Coverages/rgc_a10_20071015_CEXPRWA.e00')
+    db.add_item(x)
+    x = IceChart('rgc_a11_20200120_CEXPREA',
+                 'https://ice-glaces.ec.gc.ca/www_archive/AOI_11/Coverages/rgc_a11_20200120_CEXPREA.zip')
+    db.add_item(x)
+    x = IceChart('rgc_a11_20201207_CEXPREA',
+                 'https://ice-glaces.ec.gc.ca/www_archive/AOI_11/Coverages/rgc_a11_20201207_CEXPREA.zip')
     db.add_item(x)
     x = IceChart('nic_arctic_20030106_pl_a',
                  'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Farctic%2F2003%2Fshapefiles%2Fhemispheric&fName=nic_arctic_20030106_pl_a.zip')
@@ -68,7 +74,7 @@ def additems(createdb):
 
 def test_getitems(additems):
     db = additems
-    result = db.get_stac_items(year=2016)
+    result = db.get_stac_items(year=1973)
     assert len(result) == 1
     result = db.get_stac_items(source='NIC')
     assert len(result) == 4
@@ -78,6 +84,10 @@ def test_getitems(additems):
 def test_summary(additems):
     db = additems
     summary = db.summary()
-    assert summary['CIS Count'] == 2
-    assert summary['NIC End Year'] == 2017
+    assert summary['CIS Count'] == 4
+    assert 2003 in summary['NIC Date Range']
+    assert 2020 in summary['CIS Eastern Arctic Date Range']
+    assert 'CIS' in summary['Sources']
+    assert 'NIC' in summary['Sources']
+    assert 'antarctic' in summary['NIC Regions']
 

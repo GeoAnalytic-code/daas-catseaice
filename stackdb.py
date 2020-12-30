@@ -159,32 +159,32 @@ class StackDB:
         # total items
         sql = 'SELECT COUNT(*) FROM items;'
         ret['Total Items'] = self.query(sql, fetch=True)[0][0]
-        # self.cursor.execute(sql)
-        # ret['Total Items'] = self.cursor.fetchall()[0][0]
+
+        # list of sources
+        ret['Sources'] = []
+        sql = 'SELECT source FROM items GROUP BY source;'
+        for x in self.query(sql, fetch=True):
+            ret['Sources'].append(x[0])
 
         # count by source
         sql = 'SELECT source, count(source), min(epoch), max(epoch) FROM items GROUP BY source;'
         sct = self.query(sql, fetch=True)
-        # self.cursor.execute(sql)
-        # sct = self.cursor.fetchall()
         for src in sct:
             ret[src[0] + ' Count'] = src[1]
-            ret[src[0] + ' Start Year'] = datetime.datetime.strptime(src[2], '%Y-%m-%d %H:%M:%S').year
-            ret[src[0] + ' End Year'] = datetime.datetime.strptime(src[3], '%Y-%m-%d %H:%M:%S').year
+            ret[src[0] + ' Date Range'] = [datetime.datetime.strptime(src[2], '%Y-%m-%d %H:%M:%S').year,
+                                           datetime.datetime.strptime(src[3], '%Y-%m-%d %H:%M:%S').year]
 
         # count by region
         for src in sct:
             sql = 'SELECT region, count(region), min(epoch), max(epoch) FROM items WHERE source=? GROUP BY region;'
             rct = self.query(sql, (src[0],), fetch=True)
-            # self.cursor.execute(sql, (src[0],))
-            # rct = self.cursor.fetchall()
+            ret[src[0] + ' Regions'] = []
             for rgn in rct:
+                ret[src[0] + ' Regions'].append(rgn[0])
                 ret[' '.join((src[0], rgn[0], 'Count'))] = rgn[1]
-                ret[' '.join((src[0], rgn[0], 'Start Year'))] = datetime.datetime.strptime(rgn[2],
-                                                                                           '%Y-%m-%d %H:%M:%S').year
-                ret[' '.join((src[0], rgn[0], 'End Year'))] = datetime.datetime.strptime(rgn[3],
-                                                                                         '%Y-%m-%d %H:%M:%S').year
-
+                ret[' '.join((src[0], rgn[0], 'Date Range'))] = [
+                    datetime.datetime.strptime(rgn[2], '%Y-%m-%d %H:%M:%S').year,
+                    datetime.datetime.strptime(rgn[3], '%Y-%m-%d %H:%M:%S').year]
         return ret
 
     # create database tables

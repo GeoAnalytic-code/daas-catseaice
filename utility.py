@@ -124,6 +124,19 @@ def parse_htmlform_files(baseurl, form, payload, suffix, verify=True):
     return target_files
 
 
+def biggest_bbox(bbox1: list, bbox2: list) -> list:
+    """ given two bounding boxes, return a bbox encompassing both.
+    if either inputs is an empty list, returns the other one """
+    if len(bbox1) < 4:
+        return bbox2
+    if len(bbox2) < 4:
+        return bbox1
+    return([bbox1[0] if bbox1[0] < bbox2[0] else bbox2[0],
+            bbox1[1] if bbox1[1] < bbox2[1] else bbox2[1],
+            bbox1[2] if bbox1[2] > bbox2[2] else bbox2[2],
+            bbox1[3] if bbox1[3] > bbox2[3] else bbox2[3]])
+
+
 def extract_bbox_shape(shapefile: str, vfs: str = None):
     """ given a path to a shapefile, get the bounding box and outline geometry
     returns a dict containing the CRS of the original dataset, the bounding box and geometry as GeoJSON in both
