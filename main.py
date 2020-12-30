@@ -39,16 +39,26 @@ from scrapers import gogetcisdata, gogetnicdata
 from utility import biggest_bbox
 
 
-def fill_database(dbname='icecharts.sqlite'):
-    """ create a database and fill it with all available ice charts """
+def fill_database(dbname='icecharts.sqlite', update=True):
+    """ create a database and fill it with all available ice charts
+     if update is True, only search for data later than the latest date in the database """
     print("Creating database {0}".format(dbname))
     db = StackDB(dbname)
-    nicfiles = gogetnicdata()
+    if update:
+        lastdate = db.getLast('NIC')
+        nicfiles = gogetnicdata(startyear=lastdate.year, startmonth=lastdate.month, startday=lastdate.day)
+    else:
+        nicfiles = gogetnicdata()
     print("Adding {0} NIC files".format(len(nicfiles)))
     for nic in nicfiles:
         chart = IceChart(nic[0], nic[1])
         db.add_item(chart)
-    cisfiles = gogetcisdata()
+
+    if update:
+        lastdate = db.getLast('CIS')
+        cisfiles = gogetcisdata(startyear=lastdate.year, startmonth=lastdate.month, startday=lastdate.day)
+    else:
+        cisfiles = gogetcisdata()
     print("Adding {0} CIS files".format(len(cisfiles)))
     for cis in cisfiles:
         chart = IceChart(cis[0], cis[1])

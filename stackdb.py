@@ -94,35 +94,13 @@ class StackDB:
 
         return rows[len(rows) - limit if limit else 0:]
 
-    #######################################################################
-    #
-    ## Utilty function to get the last row of data from a database.
-    #
-    #  @param table The database's table from which to query.
-    #
-    #  @param columns The columns which to query.
-    #
-    #######################################################################
-
-    def getLast(self, table, columns):
-
-        return self.get(table, columns, limit=1)[0]
-
-    #######################################################################
-    #
-    ## Utility function that converts a dataset into CSV format.
-    #
-    #  @param data The data, retrieved from the get() function.
-    #
-    #  @param fname The file name to store the data in.
-    #
-    #  @see get()
-    #
-    #######################################################################
+    def getLast(self, source='NIC'):
+        """ returns the datetime of the oldest record for the selected source """
+        sql = 'SELECT max(epoch) FROM items WHERE source = ?;'
+        return datetime.datetime.strptime(self.query(sql, (source,), fetch=True)[0][0], "%Y-%m-%d %H:%M:%S")
 
     @staticmethod
     def toCSV(data, fname="output.csv"):
-
         with open(fname, 'a') as file:
             file.write(",".join([str(j) for i in data for j in i]))
 
@@ -141,7 +119,6 @@ class StackDB:
     #######################################################################
 
     def write(self, table, columns, data):
-
         query = "INSERT INTO {0} ({1}) VALUES ({2});".format(table, columns, data)
         print(query)
         self.cursor.execute(query)
