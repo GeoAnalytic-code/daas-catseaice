@@ -33,7 +33,6 @@ from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
-from osgeo import ogr
 
 from shapely.geometry import shape, MultiPolygon, mapping
 from shapely.ops import transform
@@ -176,52 +175,4 @@ def download_file(href, target):
                 f.write(chunk)
 
 
-def get_vector_stats(href, intype='zip'):
-    """ use OGR to get extents and SRID for a spatial dataset
-    This isn't working for the new NIC server - need to download the files first """
-    ogr.UseExceptions()
-    # if intype = 'zip':   # assume this is a zipped shapefile
-    inDriver = ogr.GetDriverByName('ESRI Shapefile')
-    if intype == 'e00':  # for e00 files, download the file first
-        inDriver = ogr.GetDriverByName('AVCE00')
 
-    # what driver to use if not specified?
-    target = href
-    if 'http' in target:
-        target = '/vsicurl/' + target
-    if '.zip' in target:
-        target = '/vsizip/' + target
-
-    # open the file for read only
-    ds = inDriver.Open(target, 0)
-    # collect stats for each layer count
-    stats = []
-    try:
-        for layer in range(ds.GetLayerCount()):
-            lstats = {"Layer": layer}
-            # get the layer, its SRID and extents
-            l1 = ds.GetLayerByIndex(layer)
-            lstats["name"] = l1.GetName()
-            lstats["description"] = l1.GetDescription()
-            lstats["features"] = l1.GetFeatureCount()
-            lstats["metadata"] = l1.GetMetadata_Dict()
-            if intype == 'zip' or (intype == 'e00' and lstats["name"] == 'PAL'):
-                # skip these next time consuming steps on e00 files that are not polygon layers
-                lstats["extents"] = l1.GetExtent()  # this should give a (projected?) bounding box
-                lstats["srid"] = l1.GetSpatialRef().ExportToWkt()  # this should give a osr.SpatialReference object
-            stats.append(lstats)
-    except:
-        pass
-
-    # if srid.IsProjected():
-    #     # convert bounding box to lat long
-    #     llproj = osr.SpatialReference()
-    #     t_srid = osr.SpatialReference()
-    #     t_srid.ImportFromEPSG(4326)
-    #     transform = osr.CoordinateTransformation(srid, t_srid)
-    #     ul_p = ogr.CreateGeometryFromWkt("POINT ({0} {1})".format(ext[0], ext[1]))
-    #     ll_p = ogr.CreateGeometryFromWkt("POINT ({0} {1})".format(ext[2], ext[3]))
-    #     ul_p.Transform(transform)
-    #     ll_p.Transform(transform)
-    #     ext = (ul_p[0], ul_p[1], ll_p[0], ll_p[1])
-    return stats
