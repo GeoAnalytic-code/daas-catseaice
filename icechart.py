@@ -42,6 +42,13 @@ CIS_AOI = {'a09': 'Hudson Bay',
            'a13': 'Great Lakes'
            }
 
+CIS_STAC = {'Hudson Bay': stac_templates.CIS_HUDSONBAY_STAC,
+            'Western Arctic': stac_templates.CIS_WESTERNARCTIC_STAC,
+            'Eastern Arctic': stac_templates.CIS_EASTERNARCTIC_STAC,
+            'Eastern Coast': stac_templates.CIS_EASTERNCOAST_STAC,
+            'Great Lakes': stac_templates.CIS_GREATLAKES_STAC
+            }
+
 FMT_E00 = 'ESRI E00'
 FMT_SHP = 'ESRI SHAPEFILE'
 FMT_UNK = 'UNKNOWN'
@@ -141,10 +148,7 @@ class IceChart:
             else:
                 bplate = stac_templates.NIC_ANTARCTIC_STAC
         else:  # if not NIC then CIS
-            if self.region == 'Hudson Bay':
-                bplate = stac_templates.CIS_HUDSONBAY_STAC
-            else:
-                bplate = stac_templates.CIS_ARCTIC_STAC
+            bplate = CIS_STAC[self.region]
 
         self.stac = pystac.Item(id=self.name,
                                 geometry=bplate['geometry'],
