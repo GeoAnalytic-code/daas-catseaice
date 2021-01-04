@@ -33,6 +33,7 @@ from datetime import datetime
 from dateutil.parser import parse
 import pystac
 import stac_templates
+from utility import get_zipshape_bbox
 
 CIS_AOI = {'a09': 'Hudson Bay',
            'a10': 'Western Arctic',
@@ -41,21 +42,41 @@ CIS_AOI = {'a09': 'Hudson Bay',
            'a13': 'Great Lakes'
            }
 
+FMT_E00 = 'ESRI E00'
+FMT_SHP = 'ESRI SHAPEFILE'
+FMT_UNK = 'UNKNOWN'
 
 class IceChart:
     """ An ice chart, which is a GIS file published by an Ice Service describing locations and characteristics of the
     sea ice regime for a specific point in time """
 
-    def __init__(self, name: str, href: str):
-        self.name = name
-        self.href = href
-        self.source = None
-        self.region = None
-        self.epoch = None
-        self.format = None
-        self.unpack_name()  # fill in the source, region, epoch and format values
-        self.stac = None
-        self.tostac()
+    def __init__(self, thedict: dict):
+        """ create a new instance from a dict """
+        self.name = thedict['name']
+        self.href = thedict['href']
+        self.source = thedict['source']
+        self.region = thedict['region']
+        self.epoch = thedict['epoch']
+        self.format = thedict['format']
+        self.stac = thedict['stac']
+
+    @classmethod
+    def from_name(cls, name: str, href: str):
+        thedict = {'name': name, 'href': href, 'source': None, 'region': None, 'epoch': None, 'format': None, 'stac': None}
+        myself = cls(thedict)
+        myself.unpack_name()
+        myself.tostac()
+        return myself
+        # self.name = name
+        # self.href = href
+        # self.source = None
+        # self.region = None
+        # self.epoch = None
+        # self.format = None
+        # self.unpack_name()  # fill in the source, region, epoch and format values
+        # self.stac = None
+        # self.tostac()
+
 
     def unpack_name(self):
         """
@@ -78,11 +99,11 @@ class IceChart:
                 fpart = fx[len(fx)-1]
             # figure out the file format from the extension
             if '.e00' == ext:
-                self.format = 'ESRI E00'
+                self.format = FMT_E00
             elif '.zip' == ext:
-                self.format = 'ESRI SHAPEFILE'
+                self.format = FMT_SHP
             else:
-                self.format = 'UNKNOWN'
+                self.format = FMT_UNK
 
             # figure out source from the beginning of the file name
             if 'rgc' == fpart[:3] or 'cis' == fpart[:3]:
@@ -119,8 +140,11 @@ class IceChart:
                 bplate = stac_templates.NIC_ARCTIC_STAC
             else:
                 bplate = stac_templates.NIC_ANTARCTIC_STAC
-        else:
-            bplate = stac_templates.CIS_ARCTIC_STAC
+        else:  # if not NIC then CIS
+            if self.region == 'Hudson Bay':
+                bplate = stac_templates.CIS_HUDSONBAY_STAC
+            else:
+                bplate = stac_templates.CIS_ARCTIC_STAC
 
         self.stac = pystac.Item(id=self.name,
                                 geometry=bplate['geometry'],
@@ -130,7 +154,28 @@ class IceChart:
                                 stac_extensions=bplate['stac_extensions'])
 
         self.stac.properties['region'] = self.region
-        if self.format == 'ESRI SHAPEFILE':
+        if self.format == FMT_SHP:
             self.stac.add_asset(key='data', asset=pystac.Asset(href=self.href, media_type='x-gis/x-shapefile'))
-        else:
+        elif self.format == FMT_E00:
             self.stac.add_asset(key='data', asset=pystac.Asset(href=self.href, media_type='application/x-ogc-avce00'))
+        else:
+            self.stac.add_asset(key='data', asset=pystac.Asset(href=self.href, media_type='text/plain'))
+
+    def exact_geometry(self):
+        """ load the file and extract the bounding box and geometry """
+        if self.format != FMT_SHP:
+            print('Only shapefiles supported for this operation')
+            return
+
+        if '_pl_a' in self.name:
+            print('Prototype files not supported for this operation')
+            return
+
+        geo = get_zipshape_bbox(self.href)
+        if geo:
+            self.stac.properties['proj:wkt2'] = geo['crs']
+            self.stac.bbox = geo['bbox']
+            self.stac.geometry = geo['geometry']
+            self.stac.properties['proj:bbox'] = geo['pbbox']
+            self.stac.properties['proj:geometry'] = geo['pgeometry']
+

@@ -67,6 +67,25 @@ def fill_database(dbname='icecharts.sqlite', update=True):
     db.close()
 
 
+def update_geometry(dbs, source='CIS', region='Hudson Bay', epoch1='2018-01-01', epoch2='2018-12-31'):
+    """ download and analyze the source files to get accurate geometry """
+    if type(dbs) is str:
+        db = StackDB(dbs)
+    elif type(dbs) is StackDB:
+        db = dbs
+    else:
+        print('Please specify a database or database name')
+        return
+    rows = db.get_items(source=source, region=region, epoch1=epoch1, epoch2=epoch2)
+    print("Getting exact geometry for {0} records".format(len(rows)))
+    for row in rows:
+        r = dict(row)
+        r['stac'] = pystac.Item.from_dict(json.loads(r['stac']))
+        chart = IceChart(dict(r))
+        chart.exact_geometry()
+        db.add_item(chart)
+
+
 def make_collection(dbs, source='NIC', region='arctic', year='All', root_href='', stacid='',
                     description='', collection_license='MIT'):
     """ create a collection of STAC items """

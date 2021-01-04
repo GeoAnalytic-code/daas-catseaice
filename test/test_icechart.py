@@ -34,45 +34,61 @@ from icechart import IceChart
 
 
 def test_cistypes():
-    x = IceChart('rgc_a09_20201214_CEXPRHB',
+    x = IceChart.from_name('rgc_a09_20201214_CEXPRHB',
                  'https://ice-glaces.ec.gc.ca/www_archive/AOI_09/Coverages/rgc_a09_20201214_CEXPRHB.zip')
     assert x.epoch == datetime.datetime(2020, 12, 14, 0, 0)
     assert x.format == 'ESRI SHAPEFILE'
     assert x.region == 'Hudson Bay'
     assert x.source == 'CIS'
-    x = IceChart('rgc_a11_20161121_CEXPRHB',
+    assert x.stac.validate() is None
+    x = IceChart.from_name('rgc_a11_20161121_CEXPRHB',
                  'https://ice-glaces.ec.gc.ca/www_archive/AOI_11/Coverages/rgc_a11_20161121_CEXPRHB.e00')
     assert x.epoch == datetime.datetime(2016, 11, 21, 0, 0)
     assert x.format == 'ESRI E00'
     assert x.region == 'Eastern Arctic'
     assert x.source == 'CIS'
+    assert x.stac.validate() is None
 
 
 def test_nicarctictypes():
-    x = IceChart('nic_arctic_20030106_pl_a',
+    x = IceChart.from_name('nic_arctic_20030106_pl_a',
                  'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Farctic%2F2003%2Fshapefiles%2Fhemispheric&fName=nic_arctic_20030106_pl_a.zip')
     assert x.epoch == datetime.datetime(2003, 1, 6, 0, 0)
     assert x.format == 'ESRI SHAPEFILE'
     assert x.region == 'arctic'
     assert x.source == 'NIC'
-    x = IceChart('arctic060803',
+    assert x.stac.validate() is None
+    x = IceChart.from_name('arctic060803',
                  'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Farctic%2F2006%2Fshapefiles%2Fhemispheric&fName=arctic060803.zip')
     assert x.epoch == datetime.datetime(2006, 8, 3, 0, 0)
     assert x.format == 'ESRI SHAPEFILE'
     assert x.region == 'arctic'
     assert x.source == 'NIC'
+    assert x.stac.validate() is None
 
 
 def test_nicantarctictypes():
-    x = IceChart('antarc170413',
+    x = IceChart.from_name('antarc170413',
                  'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Fantarctic%2F2017%2Fshapefiles%2Fhemispheric&fName=antarc170413.zip')
     assert x.epoch == datetime.datetime(2017, 4, 13, 0, 0)
     assert x.format == 'ESRI SHAPEFILE'
     assert x.region == 'antarctic'
     assert x.source == 'NIC'
-    x = IceChart('nic_antarc_20050207_pl_a',
+    assert x.stac.validate() is None
+    x = IceChart.from_name('nic_antarc_20050207_pl_a',
                  'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Fantarctic%2F2005%2Fshapefiles%2Fhemispheric&fName=nic_antarc_20050207_pl_a.zip')
     assert x.epoch == datetime.datetime(2005, 2, 7, 0, 0)
     assert x.format == 'ESRI SHAPEFILE'
     assert x.region == 'antarctic'
     assert x.source == 'NIC'
+    assert x.stac.validate() is None
+
+def test_init():
+    y = IceChart.from_name('antarc170413',
+                 'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Fantarctic%2F2017%2Fshapefiles%2Fhemispheric&fName=antarc170413.zip')
+    x = IceChart(y.__dict__)
+    assert x.epoch == datetime.datetime(2017, 4, 13, 0, 0)
+    assert x.format == 'ESRI SHAPEFILE'
+    assert x.region == 'antarctic'
+    assert x.source == 'NIC'
+    assert x.stac.validate() is None

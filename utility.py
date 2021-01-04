@@ -28,9 +28,11 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 ###############################################################################
+import os
 import re
 from urllib.parse import urljoin
-
+import tempfile
+import zipfile
 import requests
 from bs4 import BeautifulSoup
 
@@ -140,22 +142,27 @@ def extract_bbox_shape(shapefile: str, vfs: str = None):
     """ given a path to a shapefile, get the bounding box and outline geometry
     returns a dict containing the CRS of the original dataset, the bounding box and geometry as GeoJSON in both
     projected and latlong coordinates """
+    # define the lat/lon coordinate system
     wgs84 = pyproj.CRS('EPSG:4326')
+    # open the file, note the virtual file system options for fiona
+    # https://fiona.readthedocs.io/en/latest/fiona.html?highlight=fiona.open#fiona.open
     fin = fiona.open(shapefile, vfs=vfs)
     orig_crs = fin.crs
+    crs_wk2 = fin.crs_wkt
     orig_proj = pyproj.CRS(orig_crs)
     project = pyproj.Transformer.from_crs(orig_proj, wgs84, always_xy=True).transform
     mpt = MultiPolygon([shape(poly['geometry']) for poly in fin])
     fin.close()
     outline = mpt.convex_hull
     outline_wgs84 = transform(project, outline)
-    bbox = mpt.minimum_rotated_rectangle
-    bbox_wgs84 = transform(project, bbox)
-    return {'crs': to_string(orig_crs),
-            'pbbox': json.dumps(mapping(bbox)),
-            'bbox': json.dumps(mapping(bbox_wgs84)),
-            'pgeometry': json.dumps(mapping(outline)),
-            'geometry': json.dumps(mapping(outline_wgs84))}
+    bbox_poly = mpt.minimum_rotated_rectangle
+    bbox_wgs84_poly = transform(project, bbox_poly)
+
+    return {'crs': crs_wk2,
+            'pbbox': list(outline.bounds),
+            'bbox': list(outline_wgs84.bounds),
+            'pgeometry': mapping(outline),
+            'geometry': mapping(outline_wgs84)}
 
 
 def test_url(href):
@@ -173,6 +180,27 @@ def download_file(href, target):
         with open(target, 'wb') as f:
             for chunk in r.iter_content(1024):
                 f.write(chunk)
+        return target
+    else:
+        return None
 
+def get_zipshape_bbox(href):
+    """ download a zipped shapefile to a temporary folder and get its bounding box and shape """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        zipfilename = os.path.join(tmpdir, 'temp.zip')
+        if download_file(href, zipfilename):
+            zipfl = zipfile.ZipFile(zipfilename)
+            filelist = zipfl.namelist()
+            zipfl.close()
+            shpfiles = [s for s in filelist if s.endswith('.shp')]
+            if len(shpfiles) > 0:
+                # only read the first shapefile if there are more than one??
+                return extract_bbox_shape(shpfiles[0], vfs='zip:' + zipfilename)
+            else:
+                print('No shapefiles found in archive {0}'.format(href))
+                return
+        else:
+            print('Failed to download file {0}'.format(href))
+            return
 
 

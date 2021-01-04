@@ -47,23 +47,11 @@ class StackDB:
 
         self.create_tables()
 
-    #######################################################################
-    #
-    ## Opens a new database connection.
-    #
-    #  This function manually opens a new database connection. The database
-    #  can also be opened in the constructor or as a context manager.
-    #
-    #  @param name The name of the database to open.
-    #
-    #  @see \__init\__()
-    #
-    #######################################################################
-
     def open(self, name):
 
         try:
             self.conn = sqlite3.connect(name, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
+            self.conn.row_factory = sqlite3.Row
             self.cursor = self.conn.cursor()
 
         except sqlite3.Error as e:
@@ -99,34 +87,16 @@ class StackDB:
         sql = 'SELECT max(epoch) FROM items WHERE source = ?;'
         return datetime.datetime.strptime(self.query(sql, (source,), fetch=True)[0][0], "%Y-%m-%d %H:%M:%S")
 
-    @staticmethod
-    def toCSV(data, fname="output.csv"):
-        with open(fname, 'a') as file:
-            file.write(",".join([str(j) for i in data for j in i]))
-
-    #######################################################################
-    #
-    ## Function to write data to the database.
-    #
-    #  The write() function inserts new data into a table of the database.
-    #
-    #  @param table The name of the database's table to write to.
-    #
-    #  @param columns The columns to insert into, as a comma-separated string.
-    #
-    #  @param data The new data to insert, as a comma-separated string.
-    #
-    #######################################################################
 
     def write(self, table, columns, data):
         query = "INSERT INTO {0} ({1}) VALUES ({2});".format(table, columns, data)
         print(query)
         self.cursor.execute(query)
 
-    def query(self, sql, vars=(), fetch=False):
+    def query(self, sql, qvars=(), fetch=False):
         """ execute an arbitrary SQL query
         if fetch is True, return a list of results """
-        self.cursor.execute(sql, vars)
+        self.cursor.execute(sql, qvars)
         if fetch:
             return self.cursor.fetchall()
 
@@ -164,8 +134,8 @@ class StackDB:
                     datetime.datetime.strptime(rgn[3], '%Y-%m-%d %H:%M:%S').year]
         return ret
 
-    # create database tables
     def create_tables(self):
+        """ create table specificly for storing IceChart objects """
         sql = 'CREATE TABLE IF NOT EXISTS items (' \
               'name TEXT NOT NULL,' \
               'href TEXT NOT NULL,' \
@@ -177,16 +147,45 @@ class StackDB:
               'UNIQUE(source, epoch, region));'
         self.query(sql)
 
-    # open the database and check the structure
-
-    # add a record, modify if it already exists
     def add_item(self, item: IceChart):
+        """ Add an IceChart object to the items table """
         sql = '''INSERT OR REPLACE INTO items (name, href, source, region, epoch, format, stac) VALUES(?,?,?,?,?,?,?);'''
         dt = (item.name, item.href, item.source, item.region, item.epoch, item.format, json.dumps(item.stac.to_dict()),)
         return self.cursor.execute(sql, dt)
 
-    # get a set of stac items, filtered by year, region, and/or source
+    # get a list of items
+    def get_items(self, source='Any', region='Any', epoch1='Any', epoch2='Any') -> [IceChart]:
+        """ return an iterable list of IceChart objects """
+        sql = 'SELECT name, href, source, region, epoch, format, stac FROM ITEMS'
+        dt = []
+        w_cls = False
+        if source != 'Any':
+            sql = sql + ' WHERE source=?'
+            w_cls = True
+            dt.append(source)
+        if region != 'Any':
+            if w_cls:
+                sql = sql + ' AND region=?'
+            else:
+                sql = sql + ' WHERE region=?'
+            w_cls = True
+            dt.append(region)
+        if epoch1 != 'Any':
+            if w_cls:
+                sql = sql + ' AND epoch'
+            else:
+                sql = sql + ' WHERE epoch'
+            dt.append(epoch1)
+            if epoch2 != 'Any':
+                sql = sql + ' BETWEEN ? AND ?'
+                dt.append(epoch2)
+            else:
+                sql = sql + '=?'
+        sql = sql + ' ORDER BY source, region, epoch DESC;'
+        return self.query(sql, dt, fetch=True)
+
     def get_stac_items(self, source='Any', region='Any', year='All', limit=None):
+        """ return a list of STAC objects """
         sql = 'SELECT stac FROM items'
         dt = []
         w_cls = False
@@ -215,9 +214,10 @@ class StackDB:
             dt.append(limit)
 
         sql = sql + ';'
-        print(sql)
-        self.cursor.execute(sql, dt)
-        return self.cursor.fetchall()
+        return self.query(sql, dt, fetch=True)
+        # print(sql)
+        # self.cursor.execute(sql, dt)
+        # return self.cursor.fetchall()
 
     # get a record and return the column data as a dict or a STAC item (json)
 

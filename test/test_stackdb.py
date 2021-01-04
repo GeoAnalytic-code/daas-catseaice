@@ -30,6 +30,7 @@
 ###############################################################################
 
 import pytest
+import datetime
 from stackdb import StackDB
 from icechart import IceChart
 
@@ -45,34 +46,34 @@ def createdb():
 @pytest.fixture(scope='function')
 def additems(createdb):
     db = createdb
-    x = IceChart('rgc_a13_19730102_CEXPRGL',
+    x = IceChart.from_name('rgc_a13_19730102_CEXPRGL',
                  'https://ice-glaces.ec.gc.ca/www_archive/AOI_13/Coverages/rgc_a13_19730102_CEXPRGL.e00')
     db.add_item(x)
-    x = IceChart('rgc_a10_20071015_CEXPRWA',
+    x = IceChart.from_name('rgc_a10_20071015_CEXPRWA',
                  'https://ice-glaces.ec.gc.ca/www_archive/AOI_10/Coverages/rgc_a10_20071015_CEXPRWA.e00')
     db.add_item(x)
-    x = IceChart('rgc_a11_20200120_CEXPREA',
+    x = IceChart.from_name('rgc_a11_20200120_CEXPREA',
                  'https://ice-glaces.ec.gc.ca/www_archive/AOI_11/Coverages/rgc_a11_20200120_CEXPREA.zip')
     db.add_item(x)
-    x = IceChart('rgc_a11_20201207_CEXPREA',
+    x = IceChart.from_name('rgc_a11_20201207_CEXPREA',
                  'https://ice-glaces.ec.gc.ca/www_archive/AOI_11/Coverages/rgc_a11_20201207_CEXPREA.zip')
     db.add_item(x)
-    x = IceChart('nic_arctic_20030106_pl_a',
+    x = IceChart.from_name('nic_arctic_20030106_pl_a',
                  'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Farctic%2F2003%2Fshapefiles%2Fhemispheric&fName=nic_arctic_20030106_pl_a.zip')
     db.add_item(x)
-    x = IceChart('arctic060803',
+    x = IceChart.from_name('arctic060803',
                  'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Farctic%2F2006%2Fshapefiles%2Fhemispheric&fName=arctic060803.zip')
     db.add_item(x)
-    x = IceChart('antarc170413',
+    x = IceChart.from_name('antarc170413',
                  'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Fantarctic%2F2017%2Fshapefiles%2Fhemispheric&fName=antarc170413.zip')
     db.add_item(x)
-    x = IceChart('nic_antarc_20050207_pl_a',
+    x = IceChart.from_name('nic_antarc_20050207_pl_a',
                  'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Fantarctic%2F2005%2Fshapefiles%2Fhemispheric&fName=nic_antarc_20050207_pl_a.zip')
     db.add_item(x)
     yield db
 
 
-def test_getitems(additems):
+def test_getstacitems(additems):
     db = additems
     result = db.get_stac_items(year=1973)
     assert len(result) == 1
@@ -80,6 +81,11 @@ def test_getitems(additems):
     assert len(result) == 4
     result = db.get_stac_items(region='antarctic')
     assert len(result) == 2
+
+def test_getitems(additems):
+    db = additems
+    result = db.get_items(source='NIC')
+
 
 def test_summary(additems):
     db = additems
@@ -91,3 +97,12 @@ def test_summary(additems):
     assert 'NIC' in summary['Sources']
     assert 'antarctic' in summary['NIC Regions']
 
+
+def test_getlast(additems):
+    db = additems
+    last = db.getLast(source='NIC')
+    assert type(last) is datetime.datetime
+    assert last == datetime.datetime(2017, 4, 13, 0, 0, 0)
+    last = db.getLast(source='CIS')
+    assert type(last) is datetime.datetime
+    assert last.year == 2020
