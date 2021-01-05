@@ -135,7 +135,7 @@ class StackDB:
         return ret
 
     def create_tables(self):
-        """ create table specificly for storing IceChart objects """
+        """ create table specifically for storing IceChart objects """
         sql = 'CREATE TABLE IF NOT EXISTS items (' \
               'name TEXT NOT NULL,' \
               'href TEXT NOT NULL,' \

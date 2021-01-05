@@ -76,6 +76,8 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 This code may be used to generate STAC catalogs of ice charts available on government websites.  Typically, these are provided as ESRI e00 files or Shapefiles in ZIP archives on a weekly schedule.
+
+The catalog entries are stored locally in a SQLite database which can be updated when needed.  A separate function will output STAC catalogs from the database.
 ### Built With
 
 * [PyStac](https://github.com/stac-utils/pystac)
@@ -111,15 +113,23 @@ To get a local copy up and running follow these simple steps.
 ## Usage
 Fill up the database for the first time:    
    ```sh
-    filldatabase
+    >catseaice fill -d myicecharts.sqlite
    ```
 
 Export a STAC catalog:
    ```sh
-    exportcatalog
+    >catseaice write -d myicecharts.sqlite
    ```
 
 
+Report the contents of the database:
+   ```sh
+    >catseaice -R
+   ```
+
+## Details
+The fill process will query the NIC and CIS websites and save any weekly ice charts it finds to a SQLite database.
+The write process with export a static STAC catalog structure from the database, orgainized in terms of Datasource, Region, and Year. 
 
 
 <!-- ROADMAP -->

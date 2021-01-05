@@ -28,7 +28,31 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 ###############################################################################
+"""Create STAC Catalogs of Ice Charts
+
+Usage:
+  catseaice fill [-R] [-A] [-e | -E] [-d DBNAME]
+  catseaice write BASE_HREF [-t CTYPE] [-d DBNAME]
+  catseaice (-h | --help)
+  catseaice --version
+
+
+Options:
+  -h --help     Show this screen.
+  --version     Show version.
+  -R            just Report the contents of the database
+  -A            Search for all available icecharts (otherwise just update the database)
+  -e            Calculate exact geometry for all newly discovered charts  (not usually required)
+  -E            Calculate exact geometry for each chart in the database (not usually required)
+  -d DBNAME     name of the database to use [default: icecharts.sqlite]
+  BASE_HREF     root folder/url of output STAC catalog, default is the current directory [default: ...]
+  -t CTYPE      STAC catalog type [default: SELF_CONTAINED]
+                other valid values include ABSOLUTE_PUBLISHED and RELATIVE_PUBLISHED
+
+"""
+
 import os
+from docopt import docopt
 import json
 import datetime
 import pytz
@@ -42,7 +66,7 @@ from utility import biggest_bbox
 def fill_database(dbname='icecharts.sqlite', update=True, exactgeo=False):
     """ create a database and fill it with all available ice charts
      if update is True, only search for data later than the latest date in the database """
-    print("Creating database {0}".format(dbname))
+    print("Using database {0}".format(os.path.abspath(dbname)))
     db = StackDB(dbname)
     if update:
         lastdate = db.getLast('NIC')
@@ -51,7 +75,7 @@ def fill_database(dbname='icecharts.sqlite', update=True, exactgeo=False):
         nicfiles = gogetnicdata()
     print("Adding {0} NIC files".format(len(nicfiles)))
     for nic in nicfiles:
-        chart = IceChart(nic[0], nic[1])
+        chart = IceChart.from_name(nic[0], nic[1])
         if exactgeo:
             chart.exact_geometry()
         db.add_item(chart)
@@ -63,7 +87,7 @@ def fill_database(dbname='icecharts.sqlite', update=True, exactgeo=False):
         cisfiles = gogetcisdata()
     print("Adding {0} CIS files".format(len(cisfiles)))
     for cis in cisfiles:
-        chart = IceChart(cis[0], cis[1])
+        chart = IceChart.from_name(cis[0], cis[1])
         if exactgeo:
             chart.exact_geometry()
         db.add_item(chart)
@@ -150,7 +174,7 @@ def save_catalog(dbname='icecharts.sqlite', catalog_type='SELF_CONTAINED', root_
     catalog = pystac.Catalog('icecharts', 'Weekly Ice Charts from NIC and CIS', catalog_type=catalog_type)
     for source in summary['Sources']:
         print(source)
-        sroot_href = '/'.join([root_href,source])
+        sroot_href = '/'.join([root_href, source])
         srccat = pystac.Catalog(source + '-icecharts', 'Weekly icecharts from ' + source, catalog_type=catalog_type)
         for region in summary[source + ' Regions']:
             print(region)
@@ -169,4 +193,24 @@ def save_catalog(dbname='icecharts.sqlite', catalog_type='SELF_CONTAINED', root_
         catalog.add_child(srccat)
 
     catalog.normalize_and_save(root_href, catalog_type=catalog_type)
-    print("Done???")
+    db.close()
+
+
+if __name__ == '__main__':
+    arguments = docopt(__doc__, version='Catalog Ice Charts 0.1')
+    print(arguments)
+
+    if arguments['-R']:
+        db = StackDB(arguments['-d'])
+        print(db.summary())
+        db.close()
+        quit()
+
+    if arguments['fill']:
+        fill_database(dbname=arguments['-d'], update=(not arguments['-A']),
+                      exactgeo=(arguments['-e'] | arguments['-E']))
+
+    if arguments['write']:
+        if arguments['BASE_HREF'] is None:
+            arguments['BASE_HREF'] = ''
+        save_catalog(dbname=arguments['-d'], catalog_type=arguments['-t'], root_href=arguments['BASE_HREF'])
