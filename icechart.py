@@ -53,6 +53,7 @@ FMT_E00 = 'ESRI E00'
 FMT_SHP = 'ESRI SHAPEFILE'
 FMT_UNK = 'UNKNOWN'
 
+
 class IceChart:
     """ An ice chart, which is a GIS file published by an Ice Service describing locations and characteristics of the
     sea ice regime for a specific point in time """
@@ -66,24 +67,16 @@ class IceChart:
         self.epoch = thedict['epoch']
         self.format = thedict['format']
         self.stac = thedict['stac']
+        self.exactgeo = thedict['exactgeo']
 
     @classmethod
     def from_name(cls, name: str, href: str):
-        thedict = {'name': name, 'href': href, 'source': None, 'region': None, 'epoch': None, 'format': None, 'stac': None}
+        thedict = {'name': name, 'href': href, 'source': None, 'region': None, 'epoch': None, 'format': None,
+                   'stac': None, 'exactgeo': False}
         myself = cls(thedict)
         myself.unpack_name()
         myself.tostac()
         return myself
-        # self.name = name
-        # self.href = href
-        # self.source = None
-        # self.region = None
-        # self.epoch = None
-        # self.format = None
-        # self.unpack_name()  # fill in the source, region, epoch and format values
-        # self.stac = None
-        # self.tostac()
-
 
     def unpack_name(self):
         """
@@ -103,7 +96,7 @@ class IceChart:
             # if the href includes query code, assume the file name is at the end
             if '=' in fpart:
                 fx = fpart.split('=')
-                fpart = fx[len(fx)-1]
+                fpart = fx[len(fx) - 1]
             # figure out the file format from the extension
             if '.e00' == ext:
                 self.format = FMT_E00
@@ -182,4 +175,4 @@ class IceChart:
             self.stac.geometry = geo['geometry']
             self.stac.properties['proj:bbox'] = geo['pbbox']
             self.stac.properties['proj:geometry'] = geo['pgeometry']
-
+            self.exactgeo = True

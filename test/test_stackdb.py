@@ -100,9 +100,9 @@ def test_summary(additems):
 
 def test_getlast(additems):
     db = additems
-    last = db.getLast(source='NIC')
+    last = db.getlast(source='NIC')
     assert type(last) is datetime.datetime
     assert last == datetime.datetime(2017, 4, 13, 0, 0, 0)
-    last = db.getLast(source='CIS')
+    last = db.getlast(source='CIS')
     assert type(last) is datetime.datetime
     assert last.year == 2020

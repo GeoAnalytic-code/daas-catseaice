@@ -82,11 +82,14 @@ class StackDB:
 
         return rows[len(rows) - limit if limit else 0:]
 
-    def getLast(self, source='NIC'):
+    def getlast(self, source='NIC'):
         """ returns the datetime of the oldest record for the selected source """
         sql = 'SELECT max(epoch) FROM items WHERE source = ?;'
-        return datetime.datetime.strptime(self.query(sql, (source,), fetch=True)[0][0], "%Y-%m-%d %H:%M:%S")
-
+        res = self.query(sql, (source,), fetch=True)[0][0]
+        if res is not None:
+            return datetime.datetime.strptime(res, "%Y-%m-%d %H:%M:%S")
+        else:
+            return None
 
     def write(self, table, columns, data):
         query = "INSERT INTO {0} ({1}) VALUES ({2});".format(table, columns, data)
@@ -144,19 +147,22 @@ class StackDB:
               'epoch timestamp NOT NULL,' \
               'format TEXT NOT NULL,' \
               'stac TEXT NOT NULL, ' \
+              'exactgeo INTEGER NOT NULL,' \
               'UNIQUE(source, epoch, region));'
         self.query(sql)
 
     def add_item(self, item: IceChart):
         """ Add an IceChart object to the items table """
-        sql = '''INSERT OR REPLACE INTO items (name, href, source, region, epoch, format, stac) VALUES(?,?,?,?,?,?,?);'''
-        dt = (item.name, item.href, item.source, item.region, item.epoch, item.format, json.dumps(item.stac.to_dict()),)
+        sql = 'INSERT OR REPLACE INTO items (name, href, source, region, epoch, format, stac, exactgeo)' \
+              ' VALUES(?,?,?,?,?,?,?,?);'
+        dt = (item.name, item.href, item.source, item.region, item.epoch, item.format, json.dumps(item.stac.to_dict()),
+              item.exactgeo,)
         return self.cursor.execute(sql, dt)
 
     # get a list of items
-    def get_items(self, source='Any', region='Any', epoch1='Any', epoch2='Any') -> [IceChart]:
+    def get_items(self, source='Any', region='Any', epoch1='Any', epoch2='Any', exactgeo='Any') -> [IceChart]:
         """ return an iterable list of IceChart objects """
-        sql = 'SELECT name, href, source, region, epoch, format, stac FROM ITEMS'
+        sql = 'SELECT name, href, source, region, epoch, format, stac, exactgeo FROM ITEMS'
         dt = []
         w_cls = False
         if source != 'Any':
@@ -181,6 +187,18 @@ class StackDB:
                 dt.append(epoch2)
             else:
                 sql = sql + '=?'
+        if exactgeo == 'False':
+            if w_cls:
+                sql = sql + ' AND NOT exactgeo'
+            else:
+                sql = sql + ' WHERE NOT exactgeo'
+            w_cls = True
+        if exactgeo == 'True':
+            if w_cls:
+                sql = sql + ' AND exactgeo'
+            else:
+                sql = sql + ' WHERE exactgeo'
+            w_cls = True
         sql = sql + ' ORDER BY source, region, epoch DESC;'
         return self.query(sql, dt, fetch=True)
 

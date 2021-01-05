@@ -22,7 +22,8 @@
 -->
 [![Contributors][contributors-shield]][contributors-url]
 [![MIT License][license-shield]][license-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
+![GitHub Workflow Status][workflow-shield]
+
 
 
 
@@ -58,7 +59,6 @@
     <li>
       <a href="#getting-started">Getting Started</a>
       <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
@@ -111,20 +111,48 @@ To get a local copy up and running follow these simple steps.
 
 <!-- USAGE EXAMPLES -->
 ## Usage
+Check the version and help:
+   ```sh
+    $ python catseaice.py --version
+    Catalog Ice Charts 0.1
+    $ python main.py -h
+    Create STAC Catalogs of Ice Charts
+    
+    Usage:
+      catseaice fill [-R] [-A] [-e | -E] [-d DBNAME]
+      catseaice write BASE_HREF [-t CTYPE] [-d DBNAME]
+      catseaice (-h | --help)
+      catseaice --version
+    
+    
+    Options:
+      -h --help     Show this screen.
+      --version     Show version.
+      -R            just Report the contents of the database
+      -A            Search for all available icecharts (otherwise just update the database)
+      -e            Calculate exact geometry for all newly discovered charts  (not usually required)
+      -E            Calculate exact geometry for each chart in the database (not usually required)
+      -d DBNAME     name of the database to use [default: icecharts.sqlite]
+      BASE_HREF     root folder/url of output STAC catalog, default is the current directory [default: ...]
+      -t CTYPE      STAC catalog type [default: SELF_CONTAINED]
+                    other valid values include ABSOLUTE_PUBLISHED and RELATIVE_PUBLISHED
+    
+   ```
+
 Fill up the database for the first time:    
    ```sh
-    >catseaice fill -d myicecharts.sqlite
+    $ python catseaice.py fill
    ```
 
 Export a STAC catalog:
    ```sh
-    >catseaice write -d myicecharts.sqlite
+    $ python catseaice.py write
    ```
 
 
 Report the contents of the database:
    ```sh
-    >catseaice -R
+    $ python catseaice.py fill -R
    ```
 
 ## Details
@@ -162,7 +190,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 <!-- CONTACT -->
 ## Contact
 
-David Currie - [@GeoAnalyticInc](https://twitter.com/GeoAnalyticInc) - info@geoanalytic.com
+David Currie - [@GeoAnalyticInc](https://twitter.com/GeoAnalyticInc) - info@geoanalytic.com  [![LinkedIn][linkedin-shield]][linkedin-url]
 
 Project Link: [https://github.com/GeoAnalytic-code/daas-catseaice](https://github.com/GeoAnalytic-code/daas-catseaice)
 
@@ -193,3 +221,4 @@ A portion of this work was generously supported through the GeoConnections progr
 [license-url]: https://github.com/GeoAnalytic-code/daas-catseaice/blob/master/LICENSE
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=plastic&logo=linkedin&colorB=555
 [linkedin-url]: https://www.linkedin.com/in/david-currie-4a129920/
+[workflow-shield]: https://img.shields.io/github/workflow/status/geoanalytic-code/daas-catseaice/Python%20application

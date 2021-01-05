@@ -41,6 +41,7 @@ def test_cistypes():
     assert x.region == 'Hudson Bay'
     assert x.source == 'CIS'
     assert x.stac.validate() is None
+    assert x.exactgeo == 0
     x = IceChart.from_name('rgc_a11_20161121_CEXPRHB',
                  'https://ice-glaces.ec.gc.ca/www_archive/AOI_11/Coverages/rgc_a11_20161121_CEXPRHB.e00')
     assert x.epoch == datetime.datetime(2016, 11, 21, 0, 0)
@@ -92,3 +93,11 @@ def test_init():
     assert x.region == 'antarctic'
     assert x.source == 'NIC'
     assert x.stac.validate() is None
+
+def test_exactgeo():
+    x = IceChart.from_name('rgc_a09_20201214_CEXPRHB',
+                 'https://ice-glaces.ec.gc.ca/www_archive/AOI_09/Coverages/rgc_a09_20201214_CEXPRHB.zip')
+    assert x.exactgeo == 0
+    x.exact_geometry()
+    assert x.exactgeo == 1
+
