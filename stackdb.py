@@ -55,7 +55,7 @@ class StackDB:
             self.cursor = self.conn.cursor()
 
         except sqlite3.Error as e:
-            print("Error connecting to database!")
+            print("Error connecting to database! {0}".format(e))
 
     def close(self):
 

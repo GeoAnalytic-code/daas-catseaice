@@ -39,9 +39,7 @@ from bs4 import BeautifulSoup
 from shapely.geometry import shape, MultiPolygon, mapping
 from shapely.ops import transform
 import fiona
-from fiona.crs import to_string
 import pyproj
-import json
 
 
 def extract_form_fields(soup):
@@ -132,10 +130,10 @@ def biggest_bbox(bbox1: list, bbox2: list) -> list:
         return bbox2
     if len(bbox2) < 4:
         return bbox1
-    return([bbox1[0] if bbox1[0] < bbox2[0] else bbox2[0],
-            bbox1[1] if bbox1[1] < bbox2[1] else bbox2[1],
-            bbox1[2] if bbox1[2] > bbox2[2] else bbox2[2],
-            bbox1[3] if bbox1[3] > bbox2[3] else bbox2[3]])
+    return ([bbox1[0] if bbox1[0] < bbox2[0] else bbox2[0],
+             bbox1[1] if bbox1[1] < bbox2[1] else bbox2[1],
+             bbox1[2] if bbox1[2] > bbox2[2] else bbox2[2],
+             bbox1[3] if bbox1[3] > bbox2[3] else bbox2[3]])
 
 
 def extract_bbox_shape(shapefile: str, vfs: str = None):
@@ -156,7 +154,6 @@ def extract_bbox_shape(shapefile: str, vfs: str = None):
     outline = mpt.convex_hull
     outline_wgs84 = transform(project, outline)
     bbox_poly = mpt.minimum_rotated_rectangle
-    bbox_wgs84_poly = transform(project, bbox_poly)
 
     return {'crs': crs_wk2,
             'pbbox': list(outline.bounds),
@@ -184,6 +181,7 @@ def download_file(href, target):
     else:
         return None
 
+
 def get_zipshape_bbox(href):
     """ download a zipped shapefile to a temporary folder and get its bounding box and shape """
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -202,5 +200,3 @@ def get_zipshape_bbox(href):
         else:
             print('Failed to download file {0}'.format(href))
             return
-
-

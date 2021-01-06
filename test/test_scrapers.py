@@ -29,7 +29,6 @@
 # DEALINGS IN THE SOFTWARE.
 ###############################################################################
 
-import pytest
 from urllib.parse import urlparse
 from scrapers import gogetnicdata, gogetcisdata
 
@@ -45,7 +44,8 @@ def uri_validator(x):
 def test_nicscraper():
     links = gogetnicdata(startday=1, startmonth=12, startyear=2020)
     assert len(links) > 0
-    assert 'arctic201203.zip' in links[0]
+    assert 'arctic201203' in links[0][0]
+    assert 'arctic201203.zip' in links[0][1]
     assert uri_validator(links[0][1]) is True
 
 

@@ -447,7 +447,8 @@ CIS_EASTERNARCTIC_STAC = {"type": "Feature",
                           "links": [],
                           "assets": {
                               "data": {
-                                  "href": "https://ice-glaces.ec.gc.ca/www_archive/AOI_11/Coverages/rgc_a11_20201221_CEXPREA.zip",
+                                  "href": "https://ice-glaces.ec.gc.ca/www_archive/AOI_11/Coverages"
+                                          "/rgc_a11_20201221_CEXPREA.zip",
                                   "type": "x-gis/x-shapefile"
                               }
                           },
@@ -680,7 +681,8 @@ CIS_WESTERNARCTIC_STAC = {"type": "Feature",
                           "links": [],
                           "assets": {
                               "data": {
-                                  "href": "https://ice-glaces.ec.gc.ca/www_archive/AOI_10/Coverages/rgc_a10_20201221_CEXPRWA.zip",
+                                  "href": "https://ice-glaces.ec.gc.ca/www_archive/AOI_10/Coverages"
+                                          "/rgc_a10_20201221_CEXPRWA.zip",
                                   "type": "x-gis/x-shapefile"
                               }
                           },
@@ -855,14 +857,15 @@ CIS_GREATLAKES_STAC = {"type": "Feature",
                            "collection": "CIS_Ice_Charts",
                            "proj:epsg": None,
                            "proj:wkt2": "PROJCS[\"WGS_1984_Lambert_Conformal_Conic\",GEOGCS[\"WGS 84\","
-                                        "DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\","
-                                        "\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0],"
-                                        "UNIT[\"Degree\",0.0174532925199433],AUTHORITY[\"EPSG\",\"4326\"]],PROJECTION["
-                                        "\"Lambert_Conformal_Conic_2SP\"],PARAMETER[\"latitude_of_origin\",40],"
-                                        "PARAMETER[\"central_meridian\",-100],PARAMETER[\"standard_parallel_1\",49],"
-                                        "PARAMETER[\"standard_parallel_2\",77],PARAMETER[\"false_easting\",0],"
-                                        "PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],"
-                                        "AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+                                        "DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,"
+                                        "AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],"
+                                        "PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.0174532925199433],"
+                                        "AUTHORITY[\"EPSG\",\"4326\"]],PROJECTION[\"Lambert_Conformal_Conic_2SP\"],"
+                                        "PARAMETER[\"latitude_of_origin\",40],PARAMETER[\"central_meridian\",-100],"
+                                        "PARAMETER[\"standard_parallel_1\",49],PARAMETER[\"standard_parallel_2\",77],"
+                                        "PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],"
+                                        "UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],"
+                                        "AXIS[\"Northing\",NORTH]]",
                            "region": "Great Lakes",
                            "proj:bbox": [
                                312729.02610000223,

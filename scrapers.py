@@ -98,6 +98,11 @@ def gogetnicdata(site='New', startyear=STARTYEAR, startmonth=STARTMONTH, startda
         payload['oldformat'] = 'E00'
         payload['format'] = 'E00'
         target_files.extend(parse_htmlform_files(nic_basesite, nic_form, payload, 'e00', VERIFY))
+
+    # strip off the file extension from the name column of the results
+    for targ in target_files:
+        targ[0] = os.path.splitext(targ[0])[0]
+
     return target_files
 
 
@@ -116,7 +121,7 @@ def gogetcisdata(startyear=STARTYEAR, startmonth=STARTMONTH, startday=STARTDAY):
                                                                  DATE=startdate.strftime('%Y%m%d_'))
             else:
                 targeturl = Template(cis_shp_baseurl).substitute(AOI=aoi, LAOI=laoi, CAOI=caoi,
-                                                                     DATE=startdate.strftime('%Y%m%d_'))
+                                                                 DATE=startdate.strftime('%Y%m%d_'))
 
             # print(targeturl)
             if test_url(targeturl):

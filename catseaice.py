@@ -80,7 +80,6 @@ def fill_database(dbname=DBNAME, update=True, exactgeo=False):
     else:
         nicfiles = gogetnicdata()
     print("Adding or Updating {0} NIC files".format(len(nicfiles)))
-    nicadd = 0
     for nic in nicfiles:
         chart = IceChart.from_name(nic[0], nic[1])
         pprint.pprint(chart.epoch)

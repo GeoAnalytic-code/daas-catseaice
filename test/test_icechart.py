@@ -37,6 +37,7 @@ def test_cistypes():
     x = IceChart.from_name('rgc_a09_20201214_CEXPRHB',
                  'https://ice-glaces.ec.gc.ca/www_archive/AOI_09/Coverages/rgc_a09_20201214_CEXPRHB.zip')
     assert x.epoch == datetime.datetime(2020, 12, 14, 0, 0)
+    assert x.name == 'rgc_a09_20201214_CEXPRHB'
     assert x.format == 'ESRI SHAPEFILE'
     assert x.region == 'Hudson Bay'
     assert x.source == 'CIS'
@@ -55,6 +56,7 @@ def test_nicarctictypes():
     x = IceChart.from_name('nic_arctic_20030106_pl_a',
                  'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Farctic%2F2003%2Fshapefiles%2Fhemispheric&fName=nic_arctic_20030106_pl_a.zip')
     assert x.epoch == datetime.datetime(2003, 1, 6, 0, 0)
+    assert x.name == 'nic_arctic_20030106_pl_a'
     assert x.format == 'ESRI SHAPEFILE'
     assert x.region == 'arctic'
     assert x.source == 'NIC'
