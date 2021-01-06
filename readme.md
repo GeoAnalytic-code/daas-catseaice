@@ -120,6 +120,7 @@ Check the version and help:
     
     Usage:
       catseaice fill [-R] [-A] [-e | -E] [-d DBNAME]
+      catseaice report [-d DBNAME]
       catseaice write BASE_HREF [-t CTYPE] [-d DBNAME]
       catseaice (-h | --help)
       catseaice --version
@@ -128,7 +129,6 @@ Check the version and help:
     Options:
       -h --help     Show this screen.
       --version     Show version.
-      -R            just Report the contents of the database
       -A            Search for all available icecharts (otherwise just update the database)
       -e            Calculate exact geometry for all newly discovered charts  (not usually required)
       -E            Calculate exact geometry for each chart in the database (not usually required)
@@ -136,7 +136,6 @@ Check the version and help:
       BASE_HREF     root folder/url of output STAC catalog, default is the current directory [default: ...]
       -t CTYPE      STAC catalog type [default: SELF_CONTAINED]
                     other valid values include ABSOLUTE_PUBLISHED and RELATIVE_PUBLISHED
-    
    ```
 
 Fill up the database for the first time:    
@@ -152,7 +151,7 @@ Export a STAC catalog:
 
 Report the contents of the database:
    ```sh
-    $ python catseaice.py fill -R
+    $ python catseaice.py report
    ```
 
 ## Details
