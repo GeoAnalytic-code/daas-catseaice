@@ -107,6 +107,16 @@ To get a local copy up and running follow these simple steps.
    pytest
    ```
 
+### Docker
+
+1. Ensure you have Docker installed, then
+   ```sh
+   docker build -t daas/catseaice https://github.com/GeoAnalytic-code/daas-catseaice.git
+   ```
+2. Run it
+   ```sh
+   docker run daas/catseaice -help
+   ```
 
 
 <!-- USAGE EXAMPLES -->
