@@ -20,6 +20,13 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.8
+    - name: geckodriver/firefox
+      run: |
+        echo "geckodriver/firefox"
+        which geckodriver
+        geckodriver --version
+        which firefox
+        firefox --version
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
