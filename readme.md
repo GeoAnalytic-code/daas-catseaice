@@ -113,11 +113,18 @@ To get a local copy up and running follow these simple steps.
    ```sh
    docker build -t daas/catseaice https://github.com/GeoAnalytic-code/daas-catseaice.git
    ```
-2. Run it
+
+2. Run it!
    ```sh
-   docker run daas/catseaice -help
+   docker run --rm daas/catseaice -help
    ```
 
+3. To use a permanent database, map the local drive to the docker container
+    ```shell script
+    docker run --rm -v $(pwd):/opt/app/data daas/catseaice fill -d data/icecharts.sqlite
+    docker run --rm -v $(pwd):/opt/app/data daas/catseaice report -d data/icecharts.sqlite
+    docker run --rm -v $(pwd):/opt/app/data daas/catseaice write data/stac -d data/icecharts.sqlite  
+    ```
 
 <!-- USAGE EXAMPLES -->
 ## Usage

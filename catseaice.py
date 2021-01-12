@@ -82,7 +82,7 @@ def fill_database(dbname=DBNAME, update=True, exactgeo=False):
     print("Adding or Updating {0} NIC files".format(len(nicfiles)))
     for nic in nicfiles:
         chart = IceChart.from_name(nic[0], nic[1])
-        pprint.pprint(chart.epoch)
+        print(chart.epoch.isoformat())
         if exactgeo:
             chart.exact_geometry()
         db.add_item(chart)
@@ -98,7 +98,7 @@ def fill_database(dbname=DBNAME, update=True, exactgeo=False):
     print("Adding or Updating {0} CIS files".format(len(cisfiles)))
     for cis in cisfiles:
         chart = IceChart.from_name(cis[0], cis[1])
-        pprint.pprint(chart.epoch)
+        print(chart.epoch.isoformat())
         if exactgeo:
             chart.exact_geometry()
         db.add_item(chart)
