@@ -92,7 +92,12 @@ The catalog entries are stored locally in a SQLite database which can be updated
 
 To get a local copy up and running follow these simple steps.
 
-### Installation
+### Prerequisites
+Python 3
+Firefox
+Geckodriver
+
+### Installation - Local
 
 1. Clone the repo
    ```sh
@@ -106,8 +111,21 @@ To get a local copy up and running follow these simple steps.
    ```sh
    pytest
    ```
+4. Fill the database
+    ```shell script
+    python catseaice.py fill -d data/icecharts.sqlite
+   ```
+5. Report the contents of the database
+    ```shell script
+    python catseaice.py report -d data/icecharts.sqlite
+   ```
+6. Write a static STAC catalog
+    ```shell script
+    python catseaice.py write data/stac -d data/icecharts.sqlite
+   ```   
 
 ### Docker
+If you don't want to mess around with the requirements and system level stuff, you can use Docker.
 
 1. Ensure you have Docker installed, then
    ```sh
@@ -125,6 +143,7 @@ To get a local copy up and running follow these simple steps.
     docker run --rm -v $(pwd):/opt/app/data daas/catseaice report -d data/icecharts.sqlite
     docker run --rm -v $(pwd):/opt/app/data daas/catseaice write data/stac -d data/icecharts.sqlite  
     ```
+   Note that the first time you use the ```fill``` command it will take some time as the program queries the websites at NIC and CIS and populates the database.
 
 <!-- USAGE EXAMPLES -->
 ## Usage
@@ -159,6 +178,9 @@ Fill up the database for the first time:
    ```sh
     $ python catseaice.py fill
    ```
+Note that while querying the NIC site is a couple of form submissions, getting the file information from the CIS site is __much__ more intensive and it is likely that there is some throttling going on. 
+You can limit the amount of time required by setting a start date for the query, like so:
+
 
 Export a STAC catalog:
    ```sh

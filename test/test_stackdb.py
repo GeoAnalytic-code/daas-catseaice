@@ -47,28 +47,36 @@ def createdb():
 def additems(createdb):
     db = createdb
     x = IceChart.from_name('rgc_a13_19730102_CEXPRGL',
-                 'https://ice-glaces.ec.gc.ca/www_archive/AOI_13/Coverages/rgc_a13_19730102_CEXPRGL.e00')
+                           'https://ice-glaces.ec.gc.ca/www_archive/AOI_13/Coverages/rgc_a13_19730102_CEXPRGL.e00')
     db.add_item(x)
     x = IceChart.from_name('rgc_a10_20071015_CEXPRWA',
-                 'https://ice-glaces.ec.gc.ca/www_archive/AOI_10/Coverages/rgc_a10_20071015_CEXPRWA.e00')
+                           'https://ice-glaces.ec.gc.ca/www_archive/AOI_10/Coverages/rgc_a10_20071015_CEXPRWA.e00')
     db.add_item(x)
     x = IceChart.from_name('rgc_a11_20200120_CEXPREA',
-                 'https://ice-glaces.ec.gc.ca/www_archive/AOI_11/Coverages/rgc_a11_20200120_CEXPREA.zip')
+                           'https://ice-glaces.ec.gc.ca/www_archive/AOI_11/Coverages/rgc_a11_20200120_CEXPREA.zip')
     db.add_item(x)
     x = IceChart.from_name('rgc_a11_20201207_CEXPREA',
-                 'https://ice-glaces.ec.gc.ca/www_archive/AOI_11/Coverages/rgc_a11_20201207_CEXPREA.zip')
+                           'https://ice-glaces.ec.gc.ca/www_archive/AOI_11/Coverages/rgc_a11_20201207_CEXPREA.zip')
     db.add_item(x)
     x = IceChart.from_name('nic_arctic_20030106_pl_a',
-                 'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Farctic%2F2003%2Fshapefiles%2Fhemispheric&fName=nic_arctic_20030106_pl_a.zip')
+                           'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Farctic%2F2003%2Fshapefiles%2Fhemispheric&fName=nic_arctic_20030106_pl_a.zip')
     db.add_item(x)
     x = IceChart.from_name('arctic060803',
-                 'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Farctic%2F2006%2Fshapefiles%2Fhemispheric&fName=arctic060803.zip')
+                           'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Farctic%2F2006%2Fshapefiles%2Fhemispheric&fName=arctic060803.zip')
     db.add_item(x)
     x = IceChart.from_name('antarc170413',
-                 'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Fantarctic%2F2017%2Fshapefiles%2Fhemispheric&fName=antarc170413.zip')
+                           'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Fantarctic%2F2017%2Fshapefiles%2Fhemispheric&fName=antarc170413.zip')
     db.add_item(x)
     x = IceChart.from_name('nic_antarc_20050207_pl_a',
-                 'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Fantarctic%2F2005%2Fshapefiles%2Fhemispheric&fName=nic_antarc_20050207_pl_a.zip')
+                           'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Fantarctic%2F2005%2Fshapefiles%2Fhemispheric&fName=nic_antarc_20050207_pl_a.zip')
+    db.add_item(x)
+
+    # add the same record twice to ensure records are not duplicated
+    x = IceChart.from_name('arctic060803',
+                           'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Farctic%2F2006%2Fshapefiles%2Fhemispheric&fName=arctic060803.zip')
+    db.add_item(x)
+    x = IceChart.from_name('rgc_a11_20200120_CEXPREA',
+                           'https://ice-glaces.ec.gc.ca/www_archive/AOI_11/Coverages/rgc_a11_20200120_CEXPREA.zip')
     db.add_item(x)
     yield db
 
@@ -82,9 +90,17 @@ def test_getstacitems(additems):
     result = db.get_stac_items(region='antarctic')
     assert len(result) == 2
 
+
 def test_getitems(additems):
     db = additems
     result = db.get_items(source='NIC')
+    assert len(result) == 4
+    assert dict(result[0])['source'] == 'NIC'
+    result = db.get_items(source='CIS')
+    assert len(result) == 4
+    assert dict(result[0])['source'] == 'CIS'
+    result = db.get_items(source='UNK')
+    assert len(result) == 0
 
 
 def test_summary(additems):

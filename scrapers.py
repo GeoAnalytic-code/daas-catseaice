@@ -31,12 +31,11 @@
 
 import os
 import datetime
-from string import Template
 
-from utility import parse_htmlform_files, test_url
+from utility import parse_htmlform_files
 import time
 from selenium import webdriver
-from selenium.webdriver.support.ui import Select, WebDriverWait
+from selenium.webdriver.support.ui import Select
 from selenium.webdriver.firefox.options import Options
 from selenium.common.exceptions import NoSuchElementException
 
@@ -56,15 +55,7 @@ nic_form = 'weekly_products.html'
 # define some constants for accessing the CIS website
 cis_searchpage = "https://iceweb1.cis.ec.gc.ca/Archive/page1.xhtml?lang=en"
 cis_searchbase = "https://iceweb1.cis.ec.gc.ca/Archive/page1.xhtml"
-
-cis_format_break = '2020-01-14'
-cis_e00_baseurl = 'https://ice-glaces.ec.gc.ca/www_archive/$AOI/Coverages/rgc_$LAOI$DATE$CAOI.e00'
-cis_shp_baseurl = 'https://ice-glaces.ec.gc.ca/www_archive/$AOI/Coverages/rgc_$LAOI$DATE$CAOI.zip'
-aoi_list = ['AOI_09', 'AOI_10', 'AOI_11', 'AOI_12', 'AOI_13']
-laoi_list = ['a09_', 'a10_', 'a11_', 'a12_', 'a13_']
-caoi_list = ['CEXPRHB', 'CEXPRWA', 'CEXPREA', 'CEXPREC', 'CEXPRGL']
-cis_aoi_labels = ['Hudson Bay', 'Western Arctic', 'Eastern Arctic', 'Eastern Coast', 'Great Lakes']
-
+CIS_YEARS_TO_QUERY = 5
 
 def gogetnicdata(site: str = 'New', startyear: int = STARTYEAR, startmonth: int = STARTMONTH, startday: int = STARTDAY):
     """ new and improved web scraping for NIC shapefiles
@@ -145,7 +136,8 @@ class wait_for_page_load(object):
         wait_for(self.page_has_loaded)
 
 
-def gogetcisdata(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, startday: int = STARTDAY):
+def query_cis_form(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, startday: int = STARTDAY,
+                   endyear: int = STARTYEAR + CIS_YEARS_TO_QUERY):
     """ retrieve a list of e00 and zip data from the CIS site
     Old data (from ??? to 01-2020) comes as an E00 file named like this: rgc_a10_20200106_CEXPRWA.e00
     new data (since 01-2020 comes as a zip file named like this:  rgc_a10_20200330_CEXPRWA.zip
@@ -164,6 +156,7 @@ def gogetcisdata(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, start
         startday = STARTDAY
 
     s_year = str(startyear)
+    e_year = str(endyear)
     s_month = "{:02d}".format(startmonth)
     s_day = "{:02d}".format(startday)
 
@@ -197,8 +190,6 @@ def gogetcisdata(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, start
     select.select_by_value('200')
 
     # set the start dates (earliest)
-    # wait = WebDriverWait(driver, 10)
-    # element = wait.until(EC.element_to_be_clickable((By.ID, 'fromYear')))
     driver.implicitly_wait(1)  # seconds
     select = Select(driver.find_element_by_id('fromYear'))
     select.select_by_value(s_year)
@@ -214,6 +205,26 @@ def gogetcisdata(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, start
     select.select_by_value(s_month)
     select = Select(driver.find_element_by_id('fromDay'))
     select.select_by_value(s_day)
+
+    # normally the form will set the end date to the current date,
+    # we will only change it if our end year is a previous year
+    if endyear < datetime.date.today().year:
+        # set the end dates (latest)
+        driver.implicitly_wait(1)  # seconds
+        select = Select(driver.find_element_by_id('toYear'))
+        select.select_by_value(e_year)
+        select = Select(driver.find_element_by_id('toMonth'))
+        select.select_by_value(s_month)
+        select = Select(driver.find_element_by_id('toDay'))
+        select.select_by_value(s_day)
+        # do it twice, again
+        driver.implicitly_wait(1)  # seconds
+        select = Select(driver.find_element_by_id('toYear'))
+        select.select_by_value(e_year)
+        select = Select(driver.find_element_by_id('toMonth'))
+        select.select_by_value(s_month)
+        select = Select(driver.find_element_by_id('toDay'))
+        select.select_by_value(s_day)
 
     # do it one more time
     driver.implicitly_wait(1)  # seconds
@@ -242,4 +253,17 @@ def gogetcisdata(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, start
 
     driver.close()
     print('Got {0} results'.format(len(target_files)))
+    return target_files
+
+
+def gogetcisdata(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, startday: int = STARTDAY):
+    """ manage getting CIS data, uses multiple sessions to avoid throttling """
+    thisyear = datetime.date.today().year
+    if thisyear == startyear:
+        return query_cis_form(startyear, startmonth, startday)
+
+    target_files = []
+    for yr in range(startyear, thisyear, CIS_YEARS_TO_QUERY):
+        target_files.extend(query_cis_form(yr, startmonth, startday, yr + CIS_YEARS_TO_QUERY))
+
     return target_files

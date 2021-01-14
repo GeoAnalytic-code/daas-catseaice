@@ -31,7 +31,7 @@
 """Create STAC Catalogs of Ice Charts
 
 Usage:
-  catseaice fill [-R] [-A] [-e | -E] [-d DBNAME]
+  catseaice fill [-A | -start YYYY-MM-DD] [-e | -E] [-d DBNAME]
   catseaice report [-d DBNAME]
   catseaice write BASE_HREF [-t CTYPE] [-d DBNAME]
   catseaice (-h | --help)
@@ -41,6 +41,7 @@ Usage:
 Options:
   -h --help     Show this screen.
   --version     Show version.
+  -start YYYY-MM-DD Start date for searching for icecharts
   -A            Search for all available icecharts (otherwise just update the database)
   -e            Calculate exact geometry for all newly discovered charts  (not usually required)
   -E            Calculate exact geometry for each chart in the database (not usually required)
@@ -64,12 +65,15 @@ from scrapers import gogetcisdata, gogetnicdata
 from utility import biggest_bbox
 
 DBNAME = 'icecharts.sqlite'
+STARTDATE = '1968-06-25'
 
 
-def fill_database(dbname=DBNAME, update=True, exactgeo=False):
-    """ create a database and fill it with all available ice charts
+def fill_database(dbname=DBNAME, startdate=STARTDATE, update=True, exactgeo=False):
+    """ create a database and fill it with all available ice charts from startdate to the present
      if update is True, only search for data later than the latest date in the database """
     print("Using database {0}".format(os.path.abspath(dbname)))
+    if update:
+        print("Update from most recent records ")
     db = StackDB(dbname)
     if update:
         lastdate = db.getlast('NIC')
@@ -86,6 +90,8 @@ def fill_database(dbname=DBNAME, update=True, exactgeo=False):
         if exactgeo:
             chart.exact_geometry()
         db.add_item(chart)
+    # commit the changes in case we get interrupted
+    db.conn.commit()
 
     if update:
         lastdate = db.getlast('CIS')
@@ -214,8 +220,12 @@ if __name__ == '__main__':
     if arguments['fill']:
         if arguments['-E']:
             update_geometry(dbname=arguments['-d'])
-        fill_database(dbname=arguments['-d'], update=(not arguments['-A']),
-                      exactgeo=(arguments['-e'] | arguments['-E']))
+        if arguments['-start']:
+            fill_database(dbname=arguments['-d'], startdate=(arguments['-start']),
+                          exactgeo=(arguments['-e'] | arguments['-E']))
+        else:
+            fill_database(dbname=arguments['-d'], update=(not arguments['-A']),
+                          exactgeo=(arguments['-e'] | arguments['-E']))
 
     if arguments['write']:
         if arguments['BASE_HREF'] is None:
