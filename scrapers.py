@@ -35,9 +35,12 @@ import datetime
 from utility import parse_htmlform_files
 import time
 from selenium import webdriver
-from selenium.webdriver.support.ui import Select
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select, WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.firefox.options import Options
-from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import StaleElementReferenceException, NoSuchElementException
 
 # first available data from CIS appears to be 1968-06-25
 STARTYEAR = 1968
@@ -56,6 +59,7 @@ nic_form = 'weekly_products.html'
 cis_searchpage = "https://iceweb1.cis.ec.gc.ca/Archive/page1.xhtml?lang=en"
 cis_searchbase = "https://iceweb1.cis.ec.gc.ca/Archive/page1.xhtml"
 CIS_YEARS_TO_QUERY = 5
+
 
 def gogetnicdata(site: str = 'New', startyear: int = STARTYEAR, startmonth: int = STARTMONTH, startday: int = STARTDAY):
     """ new and improved web scraping for NIC shapefiles
@@ -137,7 +141,7 @@ class wait_for_page_load(object):
 
 
 def query_cis_form(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, startday: int = STARTDAY,
-                   endyear: int = STARTYEAR + CIS_YEARS_TO_QUERY):
+                   yearstoquery: int = CIS_YEARS_TO_QUERY):
     """ retrieve a list of e00 and zip data from the CIS site
     Old data (from ??? to 01-2020) comes as an E00 file named like this: rgc_a10_20200106_CEXPRWA.e00
     new data (since 01-2020 comes as a zip file named like this:  rgc_a10_20200330_CEXPRWA.zip
@@ -156,102 +160,93 @@ def query_cis_form(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, sta
         startday = STARTDAY
 
     s_year = str(startyear)
+    endyear = startyear + yearstoquery
     e_year = str(endyear)
     s_month = "{:02d}".format(startmonth)
     s_day = "{:02d}".format(startday)
 
     # get the search page and fill in the form
-    options = Options()
-    options.headless = True
-    driver = webdriver.Firefox(options=options)
-    driver.get(cis_searchpage)
-
-    # select e00 and shp files
-    driver.find_element_by_id("j_id_26:5:j_id_28").click()
-    driver.find_element_by_id("j_id_2b").click()
-
-    # select all regions
-    driver.implicitly_wait(1)  # seconds
-    driver.find_element_by_id("selRgnSelId:0").click()
-    driver.implicitly_wait(1)  # seconds
-    driver.find_element_by_id("selRgnSelId:0").click()
-    driver.implicitly_wait(1)  # seconds
-    driver.find_element_by_id("j_id_2g").click()
-
-    # set items per page to 200
-    driver.implicitly_wait(1)  # seconds
-    select = Select(driver.find_element_by_id('itemsperpage'))
-    driver.implicitly_wait(1)  # seconds
-    select.select_by_value('200')
-    # do it twice, because that's how I got it to work.
-    driver.implicitly_wait(1)  # seconds
-    select = Select(driver.find_element_by_id('itemsperpage'))
-    driver.implicitly_wait(1)  # seconds
-    select.select_by_value('200')
-
-    # set the start dates (earliest)
-    driver.implicitly_wait(1)  # seconds
-    select = Select(driver.find_element_by_id('fromYear'))
-    select.select_by_value(s_year)
-    select = Select(driver.find_element_by_id('fromMonth'))
-    select.select_by_value(s_month)
-    select = Select(driver.find_element_by_id('fromDay'))
-    select.select_by_value(s_day)
-    # do it twice, again
-    driver.implicitly_wait(1)  # seconds
-    select = Select(driver.find_element_by_id('fromYear'))
-    select.select_by_value(s_year)
-    select = Select(driver.find_element_by_id('fromMonth'))
-    select.select_by_value(s_month)
-    select = Select(driver.find_element_by_id('fromDay'))
-    select.select_by_value(s_day)
-
-    # normally the form will set the end date to the current date,
-    # we will only change it if our end year is a previous year
-    if endyear < datetime.date.today().year:
-        # set the end dates (latest)
-        driver.implicitly_wait(1)  # seconds
-        select = Select(driver.find_element_by_id('toYear'))
-        select.select_by_value(e_year)
-        select = Select(driver.find_element_by_id('toMonth'))
-        select.select_by_value(s_month)
-        select = Select(driver.find_element_by_id('toDay'))
-        select.select_by_value(s_day)
-        # do it twice, again
-        driver.implicitly_wait(1)  # seconds
-        select = Select(driver.find_element_by_id('toYear'))
-        select.select_by_value(e_year)
-        select = Select(driver.find_element_by_id('toMonth'))
-        select.select_by_value(s_month)
-        select = Select(driver.find_element_by_id('toDay'))
-        select.select_by_value(s_day)
-
-    # do it one more time
-    driver.implicitly_wait(1)  # seconds
-    select = Select(driver.find_element_by_id('itemsperpage'))
-    driver.implicitly_wait(1)  # seconds
-    select.select_by_value('200')
-
-    # assuming the form is filled out, click the submit button
-    driver.find_element_by_id("submitBtnId").click()
-    # assuming we get a search result (what if it fails?) click on the first result,
-    # then click next until the results stop changing
     target_files = []
-    driver.find_element_by_partial_link_text('Weekly Regional Ice Data').click()
-    while True:
-        try:
-            lnk = driver.find_element_by_partial_link_text('View data').get_attribute('href')
-        except NoSuchElementException:
-            lnk = driver.find_element_by_partial_link_text('Right click').get_attribute('href')
-        print(lnk)
-        if len(target_files):
-            if target_files[-1][1] == lnk:
-                break
-        target_files.append([os.path.splitext(os.path.basename(lnk))[0], lnk])
-        with wait_for_page_load(driver):
-            driver.find_element_by_link_text('Next').click()
+    try:
+        options = Options()
+        options.headless = True
+        driver = webdriver.Firefox(options=options)
+        driver.get(cis_searchpage)
 
-    driver.close()
+        # select e00 and shp files
+        WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'j_id_26:5:j_id_28')))
+        driver.find_element_by_id("j_id_26:5:j_id_28").click()
+        WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'j_id_2b')))
+        driver.find_element_by_id("j_id_2b").click()
+
+        # select all regions
+        # driver.implicitly_wait(1)  # seconds
+        # driver.find_element_by_id("selRgnSelId:0").click()
+        # driver.implicitly_wait(1)  # seconds
+        # driver.find_element_by_id("selRgnSelId:0").click()
+        # driver.implicitly_wait(1)  # seconds
+        # driver.find_element_by_id("j_id_2g").click()
+
+        # set items per page to 200
+        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, 'itemsperpage')))
+        select = Select(driver.find_element_by_id('itemsperpage'))
+        select.select_by_value('200')
+
+        # set the start dates (earliest)
+        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, 'fromYear')))
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'option[value="1968"]')))
+        select = Select(driver.find_element_by_id('fromYear'))
+        select.select_by_value(s_year)
+        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, 'fromMonth')))
+        select = Select(driver.find_element_by_id('fromMonth'))
+        select.select_by_value(s_month)
+        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, 'fromDay')))
+        select = Select(driver.find_element_by_id('fromDay'))
+        select.select_by_value(s_day)
+
+        # normally the form will set the end date to the current date,
+        # we will only change it if our end year is a previous year
+        if endyear < datetime.date.today().year:
+            # set the end dates (latest)
+            WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, 'toYear')))
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'option[value="1969"]')))
+            select = Select(driver.find_element_by_id('toYear'))
+            select.select_by_value(e_year)
+            WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, 'toMonth')))
+            select = Select(driver.find_element_by_id('toMonth'))
+            select.select_by_value(s_month)
+            WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, 'toDay')))
+            select = Select(driver.find_element_by_id('toDay'))
+            select.select_by_value(s_day)
+
+        # assuming the form is filled out, click the submit button
+        WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'submitBtnId')))
+        driver.find_element_by_id("submitBtnId").click()
+        # assuming we get a search result (what if it fails?) click on the first result,
+        # then click next until the results stop changing
+        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.PARTIAL_LINK_TEXT, 'Weekly Regional Ice Data')))
+        # with wait_for_page_load(driver):
+        driver.find_element_by_partial_link_text('Weekly Regional Ice Data').click()
+        while True:
+            # WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.LINK_TEXT, 'Next')))
+            try:
+                lnk = driver.find_element_by_partial_link_text('View data').get_attribute('href')
+            except NoSuchElementException:
+                lnk = driver.find_element_by_partial_link_text('Right click').get_attribute('href')
+            print(lnk)
+            if len(target_files):
+                if target_files[-1][1] == lnk:
+                    break
+            target_files.append([os.path.splitext(os.path.basename(lnk))[0], lnk])
+            with wait_for_page_load(driver):
+                driver.find_element_by_link_text('Next').click()
+    except StaleElementReferenceException:
+        print("Get CIS Data:  Stale reference exception from Selenium - failing gracefully but you need to try again")
+    finally:
+        driver.close()
+
     print('Got {0} results'.format(len(target_files)))
     return target_files
 
@@ -264,6 +259,6 @@ def gogetcisdata(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, start
 
     target_files = []
     for yr in range(startyear, thisyear, CIS_YEARS_TO_QUERY):
-        target_files.extend(query_cis_form(yr, startmonth, startday, yr + CIS_YEARS_TO_QUERY))
+        target_files.extend(query_cis_form(yr, startmonth, startday, CIS_YEARS_TO_QUERY))
 
     return target_files

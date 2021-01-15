@@ -78,7 +78,7 @@ def fill_database(dbname=DBNAME, startdate=STARTDATE, update=True, exactgeo=Fals
     if update:
         lastdate = db.getlast('NIC')
         if lastdate is not None:
-            nicfiles = gogetnicdata(startyear=lastdate.year, startmonth=lastdate.month, startday=lastdate.day)
+            nicfiles = gogetnicdata(startyear=lastdate.year, startmonth=lastdate.month, startday=lastdate.day+1)
         else:
             nicfiles = gogetnicdata()
     else:
@@ -96,7 +96,7 @@ def fill_database(dbname=DBNAME, startdate=STARTDATE, update=True, exactgeo=Fals
     if update:
         lastdate = db.getlast('CIS')
         if lastdate is not None:
-            cisfiles = gogetcisdata(startyear=lastdate.year, startmonth=lastdate.month, startday=lastdate.day)
+            cisfiles = gogetcisdata(startyear=lastdate.year, startmonth=lastdate.month, startday=lastdate.day+1)
         else:
             cisfiles = gogetcisdata()
     else:
