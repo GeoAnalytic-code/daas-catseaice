@@ -46,12 +46,17 @@ def createdb():
 @pytest.fixture(scope='function')
 def additems(createdb):
     db = createdb
+    # records can be added two ways, first as an IceChart item
     x = IceChart.from_name('rgc_a13_19730102_CEXPRGL',
                            'https://ice-glaces.ec.gc.ca/www_archive/AOI_13/Coverages/rgc_a13_19730102_CEXPRGL.e00')
     db.add_item(x)
-    x = IceChart.from_name('rgc_a10_20071015_CEXPRWA',
-                           'https://ice-glaces.ec.gc.ca/www_archive/AOI_10/Coverages/rgc_a10_20071015_CEXPRWA.e00')
-    db.add_item(x)
+    # or directly by name
+    # x = IceChart.from_name('rgc_a10_20071015_CEXPRWA',
+    #                        'https://ice-glaces.ec.gc.ca/www_archive/AOI_10/Coverages/rgc_a10_20071015_CEXPRWA.e00')
+    # db.add_item(x)
+    db.add_item_from_name('rgc_a10_20071015_CEXPRWA',
+                          'https://ice-glaces.ec.gc.ca/www_archive/AOI_10/Coverages/rgc_a10_20071015_CEXPRWA.e00')
+
     x = IceChart.from_name('rgc_a11_20200120_CEXPREA',
                            'https://ice-glaces.ec.gc.ca/www_archive/AOI_11/Coverages/rgc_a11_20200120_CEXPREA.zip')
     db.add_item(x)

@@ -31,7 +31,7 @@
 
 import os
 import datetime
-
+from typing import Callable
 from utility import parse_htmlform_files
 import time
 from selenium import webdriver
@@ -141,7 +141,7 @@ class wait_for_page_load(object):
 
 
 def query_cis_form(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, startday: int = STARTDAY,
-                   yearstoquery: int = CIS_YEARS_TO_QUERY):
+                   yearstoquery: int = CIS_YEARS_TO_QUERY, storefunc: Callable[[str, str], None] = None):
     """ retrieve a list of e00 and zip data from the CIS site
     Old data (from ??? to 01-2020) comes as an E00 file named like this: rgc_a10_20200106_CEXPRWA.e00
     new data (since 01-2020 comes as a zip file named like this:  rgc_a10_20200330_CEXPRWA.zip
@@ -226,7 +226,8 @@ def query_cis_form(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, sta
         driver.find_element_by_id("submitBtnId").click()
         # assuming we get a search result (what if it fails?) click on the first result,
         # then click next until the results stop changing
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.PARTIAL_LINK_TEXT, 'Weekly Regional Ice Data')))
+        WebDriverWait(driver, 20).until(
+            EC.visibility_of_element_located((By.PARTIAL_LINK_TEXT, 'Weekly Regional Ice Data')))
         # with wait_for_page_load(driver):
         driver.find_element_by_partial_link_text('Weekly Regional Ice Data').click()
         while True:
@@ -239,6 +240,8 @@ def query_cis_form(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, sta
             if len(target_files):
                 if target_files[-1][1] == lnk:
                     break
+            if storefunc:
+                storefunc(os.path.splitext(os.path.basename(lnk))[0], lnk)
             target_files.append([os.path.splitext(os.path.basename(lnk))[0], lnk])
             with wait_for_page_load(driver):
                 driver.find_element_by_link_text('Next').click()
@@ -251,14 +254,15 @@ def query_cis_form(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, sta
     return target_files
 
 
-def gogetcisdata(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, startday: int = STARTDAY):
+def gogetcisdata(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, startday: int = STARTDAY,
+                 storefunc: Callable[[str, str], None] = None):
     """ manage getting CIS data, uses multiple sessions to avoid throttling """
     thisyear = datetime.date.today().year
     if thisyear == startyear:
-        return query_cis_form(startyear, startmonth, startday)
+        return query_cis_form(startyear, startmonth, startday, storefunc=storefunc)
 
     target_files = []
     for yr in range(startyear, thisyear, CIS_YEARS_TO_QUERY):
-        target_files.extend(query_cis_form(yr, startmonth, startday, CIS_YEARS_TO_QUERY))
+        target_files.extend(query_cis_form(yr, startmonth, startday, CIS_YEARS_TO_QUERY, storefunc=storefunc))
 
     return target_files

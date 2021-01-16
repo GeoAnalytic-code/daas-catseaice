@@ -159,6 +159,13 @@ class StackDB:
               item.exactgeo,)
         return self.cursor.execute(sql, dt)
 
+    def add_item_from_name(self, name: str, href: str):
+        """ Add an IceChart by name to the items table"""
+        chart = IceChart.from_name(name, href)
+        self.add_item(chart)
+        self.conn.commit()
+        return
+
     # get a list of items
     def get_items(self, source='Any', region='Any', epoch1='Any', epoch2='Any', exactgeo='Any') -> [IceChart]:
         """ return an iterable list of IceChart objects """

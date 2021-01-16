@@ -31,7 +31,7 @@
 """Create STAC Catalogs of Ice Charts
 
 Usage:
-  catseaice fill [-A | -start YYYY-MM-DD] [-e | -E] [-d DBNAME]
+  catseaice fill [-A | -S YYYY-MM-DD] [-e | -E] [-d DBNAME]
   catseaice report [-d DBNAME]
   catseaice write BASE_HREF [-t CTYPE] [-d DBNAME]
   catseaice (-h | --help)
@@ -41,7 +41,7 @@ Usage:
 Options:
   -h --help     Show this screen.
   --version     Show version.
-  -start YYYY-MM-DD Start date for searching for icecharts
+  -S YYYY-MM-DD Start date for searching for icecharts
   -A            Search for all available icecharts (otherwise just update the database)
   -e            Calculate exact geometry for all newly discovered charts  (not usually required)
   -E            Calculate exact geometry for each chart in the database (not usually required)
@@ -96,18 +96,19 @@ def fill_database(dbname=DBNAME, startdate=STARTDATE, update=True, exactgeo=Fals
     if update:
         lastdate = db.getlast('CIS')
         if lastdate is not None:
-            cisfiles = gogetcisdata(startyear=lastdate.year, startmonth=lastdate.month, startday=lastdate.day+1)
+            cisfiles = gogetcisdata(startyear=lastdate.year, startmonth=lastdate.month, startday=lastdate.day+1,
+                                    storefunc=db.add_item_from_name)
         else:
-            cisfiles = gogetcisdata()
+            cisfiles = gogetcisdata(storefunc=db.add_item_from_name)
     else:
-        cisfiles = gogetcisdata()
+        cisfiles = gogetcisdata(storefunc=db.add_item_from_name)
     print("Adding or Updating {0} CIS files".format(len(cisfiles)))
-    for cis in cisfiles:
-        chart = IceChart.from_name(cis[0], cis[1])
-        print(chart.epoch.isoformat())
-        if exactgeo:
-            chart.exact_geometry()
-        db.add_item(chart)
+    # for cis in cisfiles:
+    #     chart = IceChart.from_name(cis[0], cis[1])
+    #     print(chart.epoch.isoformat())
+    #     if exactgeo:
+    #         chart.exact_geometry()
+    #     db.add_item(chart)
 
     db.close()
 
@@ -209,7 +210,7 @@ def save_catalog(dbname=DBNAME, catalog_type='SELF_CONTAINED', root_href=''):
 
 if __name__ == '__main__':
     arguments = docopt(__doc__, version='Catalog Ice Charts 0.1')
-    # print(arguments)
+    print(arguments)
 
     if arguments['report']:
         db = StackDB(arguments['-d'])
@@ -220,8 +221,8 @@ if __name__ == '__main__':
     if arguments['fill']:
         if arguments['-E']:
             update_geometry(dbname=arguments['-d'])
-        if arguments['-start']:
-            fill_database(dbname=arguments['-d'], startdate=(arguments['-start']),
+        if arguments['-S']:
+            fill_database(dbname=arguments['-d'], startdate=(arguments['-S']),
                           exactgeo=(arguments['-e'] | arguments['-E']))
         else:
             fill_database(dbname=arguments['-d'], update=(not arguments['-A']),
