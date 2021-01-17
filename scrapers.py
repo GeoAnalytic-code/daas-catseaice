@@ -231,11 +231,10 @@ def query_cis_form(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, sta
         # with wait_for_page_load(driver):
         driver.find_element_by_partial_link_text('Weekly Regional Ice Data').click()
         while True:
-            # WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.LINK_TEXT, 'Next')))
-            try:
-                lnk = driver.find_element_by_partial_link_text('View data').get_attribute('href')
-            except NoSuchElementException:
-                lnk = driver.find_element_by_partial_link_text('Right click').get_attribute('href')
+            # this is the part that fails eventually - need to figure out how to wait (or skip?)
+            # the problem is that both find_element_by_partial_link_text calls fail with NoSuchElementException
+            lnkel = driver.find_element_by_xpath('/html/body/main/form[2]/p[1]/a')
+            lnk = lnkel.get_attribute('href')
             print(lnk)
             if len(target_files):
                 if target_files[-1][1] == lnk:
@@ -245,8 +244,11 @@ def query_cis_form(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, sta
             target_files.append([os.path.splitext(os.path.basename(lnk))[0], lnk])
             with wait_for_page_load(driver):
                 driver.find_element_by_link_text('Next').click()
+            WebDriverWait(driver, 10).until(EC.staleness_of(lnkel));
     except StaleElementReferenceException:
         print("Get CIS Data:  Stale reference exception from Selenium - failing gracefully but you need to try again")
+    except NoSuchElementException:
+        print("Get CIS Data:  No such element exception from Selenium - failing gracefully but you need to try again")
     finally:
         driver.close()
 
