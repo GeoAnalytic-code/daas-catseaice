@@ -176,8 +176,10 @@ Check the version and help:
 
 Fill up the database for the first time:    
    ```sh
-    $ python catseaice.py fill
+    $ python catseaice.py fill -d /path/to/database.sqlite
    ```
+This will save the locations of the ice charts to a specified database.  If the -d flag is omitted, a default SQLite database named ```icecharts.sqlite``` will be created in the local folder.
+
 Note that while querying the NIC site is a couple of form submissions, getting the file information from the CIS site is _much_ more intensive and it is likely that there is some throttling going on. 
 You can limit the amount of time required by setting a start date for the query, like so:
    ```sh
@@ -186,9 +188,9 @@ You can limit the amount of time required by setting a start date for the query,
 
 Export a STAC catalog:
    ```sh
-    $ python catseaice.py write
+    $ python catseaice.py write /path/to/write/to
    ```
-   This will write the catalog to the current directory using the SELF_CONTAINED style.
+   This will write the catalog to the specified directory using the SELF_CONTAINED style.
 
 Report the contents of the database:
    ```sh
@@ -196,8 +198,10 @@ Report the contents of the database:
    ```
 
 ## Details
-The fill process will query the NIC and CIS websites and save any weekly ice charts it finds to a SQLite database.
-The write process with export a static STAC catalog structure from the database, orgainized in terms of Datasource, Region, and Year. 
+The fill process will query the NIC and CIS websites and save metadata about any weekly ice charts it finds to a SQLite database.
+The write process with export a static STAC catalog structure from the database, orgainized in terms of Datasource, Region, and Year.  
+The actual icechart data remains at the locations (at the National Ice Center or Canadian Ice Service) it was originally found.  This 
+means that the catalog may become stale if the files are moved, renamed, or removed.  
 
 
 <!-- ROADMAP -->
