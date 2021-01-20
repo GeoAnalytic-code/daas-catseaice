@@ -244,13 +244,14 @@ def query_cis_form(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, sta
             target_files.append([os.path.splitext(os.path.basename(lnk))[0], lnk])
             with wait_for_page_load(driver):
                 driver.find_element_by_link_text('Next').click()
-            WebDriverWait(driver, 10).until(EC.staleness_of(lnkel));
+            WebDriverWait(driver, 10).until(EC.staleness_of(lnkel))
     except StaleElementReferenceException:
         print("Get CIS Data:  Stale reference exception from Selenium - failing gracefully but you need to try again")
     except NoSuchElementException:
         print("Get CIS Data:  No such element exception from Selenium - failing gracefully but you need to try again")
     finally:
-        driver.close()
+        # driver.close()  # make sure the geckodriver instance is not left hanging around
+        driver.quit()   # this might be redundant
 
     print('Got {0} results'.format(len(target_files)))
     return target_files

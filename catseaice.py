@@ -74,15 +74,16 @@ def fill_database(dbname=DBNAME, startdate=STARTDATE, update=True, exactgeo=Fals
     print("Using database {0}".format(os.path.abspath(dbname)))
     if update:
         print("Update from most recent records ")
+    sdate = datetime.datetime.strptime(startdate, '%Y-%m-%d')
     db = StackDB(dbname)
     if update:
         lastdate = db.getlast('NIC')
         if lastdate is not None:
             nicfiles = gogetnicdata(startyear=lastdate.year, startmonth=lastdate.month, startday=lastdate.day+1)
         else:
-            nicfiles = gogetnicdata()
+            nicfiles = gogetnicdata(startyear=sdate.year, startmonth=sdate.month, startday=sdate.day)
     else:
-        nicfiles = gogetnicdata()
+        nicfiles = gogetnicdata(startyear=sdate.year, startmonth=sdate.month, startday=sdate.day)
     print("Adding or Updating {0} NIC files".format(len(nicfiles)))
     for nic in nicfiles:
         chart = IceChart.from_name(nic[0], nic[1])
@@ -99,9 +100,11 @@ def fill_database(dbname=DBNAME, startdate=STARTDATE, update=True, exactgeo=Fals
             cisfiles = gogetcisdata(startyear=lastdate.year, startmonth=lastdate.month, startday=lastdate.day+1,
                                     storefunc=db.add_item_from_name)
         else:
-            cisfiles = gogetcisdata(storefunc=db.add_item_from_name)
+            cisfiles = gogetcisdata(startyear=sdate.year, startmonth=sdate.month, startday=sdate.day,
+                                    storefunc=db.add_item_from_name)
     else:
-        cisfiles = gogetcisdata(storefunc=db.add_item_from_name)
+        cisfiles = gogetcisdata(startyear=sdate.year, startmonth=sdate.month, startday=sdate.day,
+                                storefunc=db.add_item_from_name)
     print("Adding or Updating {0} CIS files".format(len(cisfiles)))
     # for cis in cisfiles:
     #     chart = IceChart.from_name(cis[0], cis[1])
@@ -209,7 +212,7 @@ def save_catalog(dbname=DBNAME, catalog_type='SELF_CONTAINED', root_href=''):
 
 
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='Catalog Ice Charts 0.1')
+    arguments = docopt(__doc__, version='Catalog Ice Charts 1.0')
     print(arguments)
 
     if arguments['report']:
@@ -222,7 +225,7 @@ if __name__ == '__main__':
         if arguments['-E']:
             update_geometry(dbname=arguments['-d'])
         if arguments['-S']:
-            fill_database(dbname=arguments['-d'], startdate=(arguments['-S']),
+            fill_database(dbname=arguments['-d'], startdate=(arguments['-S']), update=False,
                           exactgeo=(arguments['-e'] | arguments['-E']))
         else:
             fill_database(dbname=arguments['-d'], update=(not arguments['-A']),

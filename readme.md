@@ -1,17 +1,3 @@
-<!--
-*** Thanks for checking out the Best-README-Template. If you have a suggestion
-*** that would make this better, please fork the repo and create a pull request
-*** or simply open an issue with the tag "enhancement".
-*** Thanks again! Now go create something AMAZING! :D
-***
-***
-***
-*** To avoid retyping too much info. Do a search and replace for the following:
-*** github_username, repo_name, twitter_handle, email, project_title, project_description
--->
-
-
-
 <!-- PROJECT SHIELDS -->
 <!--
 *** I'm using markdown "reference style" links for readability.
@@ -60,6 +46,7 @@
       <a href="#getting-started">Getting Started</a>
       <ul>
         <li><a href="#installation">Installation</a></li>
+        <li><a href="#docker">Docker</a></li>
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
@@ -93,9 +80,12 @@ The catalog entries are stored locally in a SQLite database which can be updated
 To get a local copy up and running follow these simple steps.
 
 ### Prerequisites
-Python 3
-Firefox
-Geckodriver
+* [Python 3](https://www.python.org/downloads/)
+* [Firefox](https://www.mozilla.org/)
+* [Geckodriver](https://github.com/mozilla/geckodriver/releases)
+
+Also recommended:
+* [Docker](https://www.docker.com/)
 
 ### Installation - Local
 
@@ -143,19 +133,27 @@ If you don't want to mess around with the requirements and system level stuff, y
     docker run --rm -v $(pwd):/opt/app/data daas/catseaice report -d data/icecharts.sqlite
     docker run --rm -v $(pwd):/opt/app/data daas/catseaice write data/stac -d data/icecharts.sqlite  
     ```
-   Note that the first time you use the ```fill``` command it will take some time as the program queries the websites at NIC and CIS and populates the database.
-
+   Note that the first time you use the ```fill``` command it will take some time as the program queries the websites at NIC and CIS and populates the database.  
+   To shorten this step, you can limit the time frame searched, like so:
+   ```shell script
+    docker run --rm -v $(pwd):/opt/app/data daas/catseaice fill -d data/icecharts.sqlite -S 2019-01-01
+   ``` 
+    This command will only search for data from Jan 1, 2019 to the present.
+    
 <!-- USAGE EXAMPLES -->
 ## Usage
+The examples shown below are for a local installation.  For a Docker installation, refer to the usage examples shown above.
+
 Check the version and help:
    ```sh
     $ python catseaice.py --version
-    Catalog Ice Charts 0.1
-    $ python main.py -h
+    Catalog Ice Charts 1.0
+
+    $ python catseaice.py -h
     Create STAC Catalogs of Ice Charts
-    
+
     Usage:
-      catseaice fill [-R] [-A] [-e | -E] [-d DBNAME]
+      catseaice fill [-A | -S YYYY-MM-DD] [-e | -E] [-d DBNAME]
       catseaice report [-d DBNAME]
       catseaice write BASE_HREF [-t CTYPE] [-d DBNAME]
       catseaice (-h | --help)
@@ -165,6 +163,7 @@ Check the version and help:
     Options:
       -h --help     Show this screen.
       --version     Show version.
+      -S YYYY-MM-DD Start date for searching for icecharts
       -A            Search for all available icecharts (otherwise just update the database)
       -e            Calculate exact geometry for all newly discovered charts  (not usually required)
       -E            Calculate exact geometry for each chart in the database (not usually required)
@@ -172,21 +171,24 @@ Check the version and help:
       BASE_HREF     root folder/url of output STAC catalog, default is the current directory [default: ...]
       -t CTYPE      STAC catalog type [default: SELF_CONTAINED]
                     other valid values include ABSOLUTE_PUBLISHED and RELATIVE_PUBLISHED
+
    ```
 
 Fill up the database for the first time:    
    ```sh
     $ python catseaice.py fill
    ```
-Note that while querying the NIC site is a couple of form submissions, getting the file information from the CIS site is __much__ more intensive and it is likely that there is some throttling going on. 
+Note that while querying the NIC site is a couple of form submissions, getting the file information from the CIS site is _much_ more intensive and it is likely that there is some throttling going on. 
 You can limit the amount of time required by setting a start date for the query, like so:
-
+   ```sh
+    $ python catseaice.py fill -S 2019-01-01
+   ```
 
 Export a STAC catalog:
    ```sh
     $ python catseaice.py write
    ```
-
+   This will write the catalog to the current directory using the SELF_CONTAINED style.
 
 Report the contents of the database:
    ```sh
