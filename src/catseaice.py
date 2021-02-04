@@ -119,10 +119,11 @@ def fill_database(dbname=DBNAME, startdate=STARTDATE, update=True, exactgeo=Fals
 def update_geometry(dbname, source='Any', region='Any', epoch1='Any', epoch2='Any'):
     """ download and analyze the source files to get accurate geometry """
     db = StackDB(dbname)
-    rows = db.get_items(source=source, region=region, epoch1=epoch1, epoch2=epoch2, exactgeo=True)
+    rows = db.get_items(source=source, region=region, epoch1=epoch1, epoch2=epoch2, exactgeo='False')
     print("Getting exact geometry for {0} records".format(len(rows)))
     for row in rows:
         r = dict(row)
+        print(f"{r['name']}")
         r['stac'] = pystac.Item.from_dict(json.loads(r['stac']))
         chart = IceChart(dict(r))
         chart.exact_geometry()
@@ -197,7 +198,7 @@ def save_catalog(dbname=DBNAME, catalog_type='SELF_CONTAINED', root_href=''):
             rgncat = pystac.Catalog('-'.join([source, region, 'icecharts']).strip(), 'Weekly icecharts for ' + region,
                                     catalog_type=catalog_type)
             for yr in range(summary['{0} {1} Date Range'.format(source, region)][0],
-                            summary['{0} {1} Date Range'.format(source, region)][1]):
+                            summary['{0} {1} Date Range'.format(source, region)][1]+1):
                 print(yr)
                 yrsroot_href = '/'.join([rsroot_href, str(yr)])
                 collid = ''.join([source, region, str(yr), 'icecharts']).strip()

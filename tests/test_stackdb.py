@@ -31,8 +31,8 @@
 
 import pytest
 import datetime
-from stackdb import StackDB
-from icechart import IceChart
+from src.stackdb import StackDB
+from src.icechart import IceChart
 
 
 @pytest.fixture(scope='function')

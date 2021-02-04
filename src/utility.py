@@ -33,10 +33,11 @@ import re
 from urllib.parse import urljoin
 import tempfile
 import zipfile
+from zipfile import BadZipFile
 import requests
 from bs4 import BeautifulSoup
 
-from shapely.geometry import shape, MultiPolygon, mapping
+from shapely.geometry import shape, Point, Polygon, MultiPoint, MultiPolygon, mapping
 from shapely.ops import transform
 import fiona
 import pyproj
@@ -140,20 +141,54 @@ def extract_bbox_shape(shapefile: str, vfs: str = None):
     """ given a path to a shapefile, get the bounding box and outline geometry
     returns a dict containing the CRS of the original dataset, the bounding box and geometry as GeoJSON in both
     projected and latlong coordinates """
-    # define the lat/lon coordinate system
+    # define the lat/lon coordinate system and the poles
     wgs84 = pyproj.CRS('EPSG:4326')
+    northpole = Point([0, 90])
+    southpole = Point([0, -90])
     # open the file, note the virtual file system options for fiona
     # https://fiona.readthedocs.io/en/latest/fiona.html?highlight=fiona.open#fiona.open
     fin = fiona.open(shapefile, vfs=vfs)
     orig_crs = fin.crs
     crs_wk2 = fin.crs_wkt
-    orig_proj = pyproj.CRS(orig_crs)
-    project = pyproj.Transformer.from_crs(orig_proj, wgs84, always_xy=True).transform
+    # get a multipolygon feature from all the features in the shapefile
     mpt = MultiPolygon([shape(poly['geometry']) for poly in fin])
     fin.close()
+    # set up the coordinate tranformations and convert the poles
+    orig_proj = pyproj.CRS(orig_crs)
+    to_wgs84 = pyproj.Transformer.from_crs(orig_proj, wgs84, always_xy=True).transform
+    from_wgs84 = pyproj.Transformer.from_crs(wgs84, orig_proj, always_xy=True).transform
+    northpole_p = transform(from_wgs84, northpole)
+    southpole_p = transform(from_wgs84, southpole)
+    # compute the outline geometry of the multipolygon (this is all done in the projected coordinate system)
     outline = mpt.convex_hull
-    outline_wgs84 = transform(project, outline)
-    bbox_poly = mpt.minimum_rotated_rectangle
+    # Now transform to WGS84, we will treat the data differently if it covers one of the poles
+    # first - convert the outline polygon to a multipoint object
+    outline_pts = MultiPoint(list(outline.exterior.coords))
+    # next transform to WGS84, this time using pyproj directly
+    outlinepts_wgs84 = transform(to_wgs84, outline_pts)
+    if outline.contains(northpole_p):
+        # a North polar outline
+        # add a few points at the pole
+        tpts = list(outlinepts_wgs84.geoms)
+        tpts.append(Point(-179.9999, 90))
+        tpts.append(Point(0, 90))
+        tpts.append(Point(179.9999, 90))
+        otlp_wgs84 = MultiPoint(tpts)
+        # now get the convex hull of the new collection of points
+        outline_wgs84 = otlp_wgs84.convex_hull
+    elif outline.contains(southpole_p):
+        # a South polar outline
+        # add a few points at the pole
+        tpts = list(outlinepts_wgs84.geoms)
+        tpts.append(Point(-179.9999, -90))
+        tpts.append(Point(0, -90))
+        tpts.append(Point(179.9999, -90))
+        otlp_wgs84 = MultiPoint(tpts)
+        # now get the convex hull of the new collection of points
+        outline_wgs84 = otlp_wgs84.convex_hull
+    else:
+        # if the pole isn't enclosed, we should be able to just transform the outline to lat/long
+        outline_wgs84 = transform(to_wgs84, outline)
 
     return {'crs': crs_wk2,
             'pbbox': list(outline.bounds),
@@ -188,6 +223,14 @@ def get_zipshape_bbox(href):
         zipfilename = os.path.join(tmpdir, 'temp.zip')
         if download_file(href, zipfilename):
             zipfl = zipfile.ZipFile(zipfilename)
+            try:
+                if zipfl.testzip():
+                    print(f"Corrupt zip file {href}")
+                    zipfl.close()
+                    return
+            except BadZipFile:
+                print(f"Corrupt zip file {href}")
+                return
             filelist = zipfl.namelist()
             zipfl.close()
             shpfiles = [s for s in filelist if s.endswith('.shp')]
