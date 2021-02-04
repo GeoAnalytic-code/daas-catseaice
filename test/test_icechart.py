@@ -30,7 +30,7 @@
 ###############################################################################
 
 import datetime
-from icechart import IceChart
+from src.icechart import IceChart
 
 
 def test_cistypes():

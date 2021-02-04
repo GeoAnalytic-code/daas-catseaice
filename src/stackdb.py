@@ -157,17 +157,20 @@ class StackDB:
               ' VALUES(?,?,?,?,?,?,?,?);'
         dt = (item.name, item.href, item.source, item.region, item.epoch, item.format, json.dumps(item.stac.to_dict()),
               item.exactgeo,)
-        return self.cursor.execute(sql, dt)
+        self.cursor.execute(sql, dt)
+        self.conn.commit()
+        return
 
     def add_item_from_name(self, name: str, href: str):
         """ Add an IceChart by name to the items table"""
         chart = IceChart.from_name(name, href)
         self.add_item(chart)
-        self.conn.commit()
+        # self.conn.commit()
         return
 
     # get a list of items
-    def get_items(self, source='Any', region='Any', epoch1='Any', epoch2='Any', exactgeo='Any') -> [IceChart]:
+    def get_items(self, source: str = 'Any', region: str = 'Any', epoch1: str = 'Any', epoch2: str = 'Any',
+                  exactgeo: str = 'Any') -> [IceChart]:
         """ return an iterable list of IceChart objects """
         sql = 'SELECT name, href, source, region, epoch, format, stac, exactgeo FROM ITEMS'
         dt = []
@@ -206,7 +209,8 @@ class StackDB:
             else:
                 sql = sql + ' WHERE exactgeo'
             w_cls = True
-        sql = sql + ' ORDER BY source, region, epoch DESC;'
+        # sql = sql + ' ORDER BY source, region, epoch DESC;'
+        print(sql, dt)
         return self.query(sql, dt, fetch=True)
 
     def get_stac_items(self, source='Any', region='Any', year='All', limit=None):

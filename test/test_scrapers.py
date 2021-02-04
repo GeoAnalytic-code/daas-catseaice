@@ -30,7 +30,7 @@
 ###############################################################################
 
 from urllib.parse import urlparse
-from scrapers import gogetnicdata, gogetcisdata
+from src.scrapers import gogetnicdata, gogetcisdata
 
 
 def uri_validator(x):

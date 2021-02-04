@@ -164,7 +164,7 @@ class IceChart:
             print('Only shapefiles supported for this operation')
             return
 
-        if '_pl_a' in self.name:
+        if '_pl_a' in self.name or '_ll_a' in self.name:
             print('Prototype files not supported for this operation')
             return
 

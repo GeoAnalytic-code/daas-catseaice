@@ -13,4 +13,4 @@ COPY ./requirements.txt .
 RUN pip3 install -r requirements.txt
 COPY . /opt/app
 WORKDIR /opt/app
-ENTRYPOINT ["python3", "./catseaice.py"]
+CMD ["python3", "src/catseaice.py"]
