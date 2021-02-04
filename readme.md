@@ -101,13 +101,13 @@ Also recommended:
    ```sh
    pytest
    ```
-4. Fill the database
+4. Fill the database - this command will put the database in the data/ folder
     ```shell script
-    python catseaice.py fill -d data/icecharts.sqlite
+    python src/catseaice.py fill -d data/icecharts.sqlite
    ```
 5. Report the contents of the database
     ```shell script
-    python catseaice.py report -d data/icecharts.sqlite
+    python src/catseaice.py report -d data/icecharts.sqlite
    ```
 6. Write a static STAC catalog
     ```shell script
@@ -124,19 +124,20 @@ If you don't want to mess around with the requirements and system level stuff, y
 
 2. Run it!
    ```sh
-   docker run --rm daas/catseaice -help
+   docker run --rm daas/catseaice pytest
+   docker run --rm daas/catseaice python3 src/catseaice.py -help
    ```
 
 3. To use a permanent database, map the local drive to the docker container
     ```shell script
-    docker run --rm -v $(pwd):/opt/app/data daas/catseaice fill -d data/icecharts.sqlite
-    docker run --rm -v $(pwd):/opt/app/data daas/catseaice report -d data/icecharts.sqlite
-    docker run --rm -v $(pwd):/opt/app/data daas/catseaice write data/stac -d data/icecharts.sqlite  
+    docker run --rm -v $(pwd):/opt/app/data daas/catseaice python3 src/catseaice.py fill -d data/icecharts.sqlite
+    docker run --rm -v $(pwd):/opt/app/data daas/catseaice python3 src/catseaice.py report -d data/icecharts.sqlite
+    docker run --rm -v $(pwd):/opt/app/data daas/catseaice python3 src/catseaice.py write data/stac -d data/icecharts.sqlite  
     ```
    Note that the first time you use the ```fill``` command it will take some time as the program queries the websites at NIC and CIS and populates the database.  
    To shorten this step, you can limit the time frame searched, like so:
    ```shell script
-    docker run --rm -v $(pwd):/opt/app/data daas/catseaice fill -d data/icecharts.sqlite -S 2019-01-01
+    docker run --rm -v $(pwd):/opt/app/data daas/catseaice python3 src/catseaice.py fill -d data/icecharts.sqlite -S 2019-01-01
    ``` 
     This command will only search for data from Jan 1, 2019 to the present.
     
