@@ -210,6 +210,11 @@ means that the catalog may become stale if the files are moved, renamed, or remo
 
 See the [open issues](https://github.com/GeoAnalytic-code/daas-catseaice/issues) for a list of proposed features (and known issues).
 
+## Unit Tests    
+This command will run the unit tests in a docker container, writing a coverage report to htmlcov/index.html
+   ```shell
+   $ docker run --rm -v $(pwd):/opt/app daas/catseaice pytest --cov=src --cov-report=html
+   ```
 
 
 <!-- CONTRIBUTING -->

@@ -102,4 +102,24 @@ def test_exactgeo():
     assert x.exactgeo == 0
     x.exact_geometry()
     assert x.exactgeo == 1
-
+    # try a shapefile that lacks projection metadata
+    x = IceChart.from_name('nic_antarc_20050207_pl_a',
+                 'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Fantarctic%2F2005%2Fshapefiles%2Fhemispheric&fName=nic_antarc_20050207_pl_a.zip')
+    assert x.exactgeo == 0
+    # this should fail
+    x.exact_geometry()
+    assert x.exactgeo == 0
+    # try a good antarctic file
+    x = IceChart.from_name('antarc170413',
+                 'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Fantarctic%2F2017%2Fshapefiles%2Fhemispheric&fName=antarc170413.zip')
+    assert x.exactgeo == 0
+    # this should pass
+    x.exact_geometry()
+    assert x.exactgeo == 1
+    # try a good arctic file
+    x = IceChart.from_name('arctic060803',
+                 'https://usicecenter.gov/File/DownloadProduct?products=%2Fweekly%2Farctic%2F2006%2Fshapefiles%2Fhemispheric&fName=arctic060803.zip')
+    assert x.exactgeo == 0
+    # this should pass
+    x.exact_geometry()
+    assert x.exactgeo == 1
