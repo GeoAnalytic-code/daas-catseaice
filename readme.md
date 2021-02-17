@@ -139,7 +139,7 @@ If you don't want to mess around with the requirements and system level stuff, y
    ```shell script
     docker run --rm -v $(pwd):/opt/app/data daas/catseaice python3 src/catseaice.py fill -d data/icecharts.sqlite -S 2019-01-01
    ``` 
-    This command will only search for data from Jan 1, 2019 to the present.
+    This command will only search for data from Jan 1, 2019 to the present.  Once the database has been filled, subsequent ```fill``` commands will only query for charts created after the latest entry in the database.
     
 <!-- USAGE EXAMPLES -->
 ## Usage

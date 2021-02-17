@@ -187,16 +187,20 @@ def save_catalog(dbname=DBNAME, catalog_type='SELF_CONTAINED', root_href=''):
         root_href = os.getcwd()
 
     # the master catalog
-    catalog = pystac.Catalog('icecharts', 'Weekly Ice Charts from NIC and CIS', catalog_type=catalog_type)
+    catalog = pystac.Catalog('icecharts', 'Weekly Ice Charts from NIC and CIS',
+                             catalog_type=catalog_type, stac_extensions=["projection"])
     for source in summary['Sources']:
+        # TODO - change configuration so there are only collections for each source, not source-year-region
+        # TODO - make sure id values written to catalogs and collections have spaces removed
         print(source)
         sroot_href = '/'.join([root_href, source])
         srccat = pystac.Catalog(source + '-icecharts', 'Weekly icecharts from ' + source, catalog_type=catalog_type)
         for region in summary[source + ' Regions']:
             print(region)
             rsroot_href = '/'.join([sroot_href, region])
-            rgncat = pystac.Catalog('-'.join([source, region, 'icecharts']).strip(), 'Weekly icecharts for ' + region,
-                                    catalog_type=catalog_type)
+            rgncat = pystac.Catalog('-'.join([source, region, 'icecharts']).replace(' ','')
+                                    , 'Weekly icecharts for ' + region,
+                                    catalog_type=catalog_type, stac_extensions=["projection"])
             for yr in range(summary['{0} {1} Date Range'.format(source, region)][0],
                             summary['{0} {1} Date Range'.format(source, region)][1]+1):
                 print(yr)
