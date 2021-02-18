@@ -29,6 +29,7 @@
 # DEALINGS IN THE SOFTWARE.
 ###############################################################################
 import os
+import logging
 from datetime import datetime
 from dateutil.parser import parse
 import pystac
@@ -161,11 +162,11 @@ class IceChart:
     def exact_geometry(self):
         """ load the file and extract the bounding box and geometry """
         if self.format != FMT_SHP:
-            print('Only shapefiles supported for this operation')
+            logging.warning('Only shapefiles supported for this operation')
             return
 
         if '_pl_a' in self.name or '_ll_a' in self.name:
-            print('Prototype files not supported for this operation')
+            logging.warning('Prototype files not supported for this operation')
             return
 
         geo = get_zipshape_bbox(self.href)

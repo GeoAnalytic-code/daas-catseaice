@@ -29,6 +29,7 @@
 # DEALINGS IN THE SOFTWARE.
 ###############################################################################
 import os
+import logging
 import re
 from urllib.parse import urljoin
 import tempfile
@@ -225,11 +226,11 @@ def get_zipshape_bbox(href):
             zipfl = zipfile.ZipFile(zipfilename)
             try:
                 if zipfl.testzip():
-                    print(f"Corrupt zip file {href}")
+                    logging.error(f"Corrupt zip file {href}")
                     zipfl.close()
                     return
             except BadZipFile:
-                print(f"Corrupt zip file {href}")
+                logging.error(f"Corrupt zip file {href}")
                 return
             filelist = zipfl.namelist()
             zipfl.close()
@@ -238,8 +239,8 @@ def get_zipshape_bbox(href):
                 # only read the first shapefile if there are more than one??
                 return extract_bbox_shape(shpfiles[0], vfs='zip:' + zipfilename)
             else:
-                print('No shapefiles found in archive {0}'.format(href))
+                logging.warning('No shapefiles found in archive {0}'.format(href))
                 return
         else:
-            print('Failed to download file {0}'.format(href))
+            logging.error('Failed to download file {0}'.format(href))
             return

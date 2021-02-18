@@ -30,6 +30,7 @@
 ###############################################################################
 
 import os
+import logging
 import datetime
 from typing import Callable
 from utility import parse_htmlform_files
@@ -235,7 +236,7 @@ def query_cis_form(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, sta
             # the problem is that both find_element_by_partial_link_text calls fail with NoSuchElementException
             lnkel = driver.find_element_by_xpath('/html/body/main/form[2]/p[1]/a')
             lnk = lnkel.get_attribute('href')
-            print(lnk)
+            logging.info(lnk)
             if len(target_files):
                 if target_files[-1][1] == lnk:
                     break
@@ -246,14 +247,14 @@ def query_cis_form(startyear: int = STARTYEAR, startmonth: int = STARTMONTH, sta
                 driver.find_element_by_link_text('Next').click()
             WebDriverWait(driver, 10).until(EC.staleness_of(lnkel))
     except StaleElementReferenceException:
-        print("Get CIS Data:  Stale reference exception from Selenium - failing gracefully but you need to try again")
+        logging.error("Get CIS Data:  Stale reference exception from Selenium - failing gracefully but you need to try again")
     except NoSuchElementException:
-        print("Get CIS Data:  No such element exception from Selenium - failing gracefully but you need to try again")
+        logging.error("Get CIS Data:  No such element exception from Selenium - failing gracefully but you need to try again")
     finally:
         # driver.close()  # make sure the geckodriver instance is not left hanging around
         driver.quit()   # this might be redundant
 
-    print('Got {0} results'.format(len(target_files)))
+    logging.info('Got {0} results'.format(len(target_files)))
     return target_files
 
 

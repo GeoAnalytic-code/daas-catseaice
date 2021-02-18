@@ -89,23 +89,31 @@ def additems(createdb):
 def test_getstacitems(additems):
     db = additems
     result = db.get_stac_items(year=1973)
-    assert len(result) == 1
+    assert sum(1 for _ in result) == 1
     result = db.get_stac_items(source='NIC')
-    assert len(result) == 4
+    assert sum(1 for _ in result) == 4
     result = db.get_stac_items(region='antarctic')
-    assert len(result) == 2
+    assert sum(1 for _ in result) == 2
 
 
 def test_getitems(additems):
     db = additems
     result = db.get_items(source='NIC')
-    assert len(result) == 4
-    assert dict(result[0])['source'] == 'NIC'
+    count = 0
+    for res in result:
+        assert dict(res)['source'] == 'NIC'
+        count += 1
+    assert count == 4
+
     result = db.get_items(source='CIS')
-    assert len(result) == 4
-    assert dict(result[0])['source'] == 'CIS'
+    count = 0
+    for res in result:
+        assert dict(res)['source'] == 'CIS'
+        count += 1
+    assert count == 4
+
     result = db.get_items(source='UNK')
-    assert len(result) == 0
+    assert sum(1 for _ in result) == 0
 
 
 def test_summary(additems):

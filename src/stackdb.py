@@ -29,6 +29,7 @@
 # DEALINGS IN THE SOFTWARE.
 ###############################################################################
 import datetime
+import logging
 import sqlite3
 import json
 from icechart import IceChart
@@ -55,7 +56,7 @@ class StackDB:
             self.cursor = self.conn.cursor()
 
         except sqlite3.Error as e:
-            print("Error connecting to database! {0}".format(e))
+            logging.error("Error connecting to database! {0}".format(e))
 
     def close(self):
 
@@ -93,15 +94,17 @@ class StackDB:
 
     def write(self, table, columns, data):
         query = "INSERT INTO {0} ({1}) VALUES ({2});".format(table, columns, data)
-        print(query)
+        logging.info(query)
         self.cursor.execute(query)
 
     def query(self, sql, qvars=(), fetch=False):
         """ execute an arbitrary SQL query
-        if fetch is True, return a list of results """
+        if fetch is True, return a list of results
+        otherwise, return the cursor (which can be iterated over) """
         self.cursor.execute(sql, qvars)
         if fetch:
             return self.cursor.fetchall()
+        return self.cursor
 
     def summary(self):
         """ return a dict of summary statistics for the items table """
@@ -150,6 +153,7 @@ class StackDB:
               'exactgeo INTEGER NOT NULL,' \
               'UNIQUE(source, epoch, region));'
         self.query(sql)
+        # TODO: deal with failure
 
     def add_item(self, item: IceChart):
         """ Add an IceChart object to the items table """
@@ -168,10 +172,9 @@ class StackDB:
         # self.conn.commit()
         return
 
-    # get a list of items
     def get_items(self, source: str = 'Any', region: str = 'Any', epoch1: str = 'Any', epoch2: str = 'Any',
                   exactgeo: str = 'Any') -> [IceChart]:
-        """ return an iterable list of IceChart objects """
+        """ return an iterable cursor of IceChart objects """
         sql = 'SELECT name, href, source, region, epoch, format, stac, exactgeo FROM ITEMS'
         dt = []
         w_cls = False
@@ -210,11 +213,11 @@ class StackDB:
                 sql = sql + ' WHERE exactgeo'
             w_cls = True
         # sql = sql + ' ORDER BY source, region, epoch DESC;'
-        print(sql, dt)
-        return self.query(sql, dt, fetch=True)
+        logging.info(sql, dt)
+        return self.query(sql, dt, fetch=False)
 
     def get_stac_items(self, source='Any', region='Any', year='All', limit=None):
-        """ return a list of STAC objects """
+        """ return an iterable cursor of STAC objects """
         sql = 'SELECT stac FROM items'
         dt = []
         w_cls = False
@@ -243,8 +246,8 @@ class StackDB:
             dt.append(limit)
 
         sql = sql + ';'
-        return self.query(sql, dt, fetch=True)
-        # print(sql)
+        return self.query(sql, dt, fetch=False)
+        # logging.info(sql)
         # self.cursor.execute(sql, dt)
         # return self.cursor.fetchall()
 

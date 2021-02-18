@@ -55,6 +55,7 @@ Options:
 import os
 from docopt import docopt
 import json
+import logging
 import datetime
 import pytz
 import pprint
@@ -87,7 +88,7 @@ def fill_database(dbname=DBNAME, startdate=STARTDATE, update=True, exactgeo=Fals
     print("Adding or Updating {0} NIC files".format(len(nicfiles)))
     for nic in nicfiles:
         chart = IceChart.from_name(nic[0], nic[1])
-        print(chart.epoch.isoformat())
+        logging.info(chart.epoch.isoformat())
         if exactgeo:
             chart.exact_geometry()
         db.add_item(chart)
@@ -105,7 +106,7 @@ def fill_database(dbname=DBNAME, startdate=STARTDATE, update=True, exactgeo=Fals
     else:
         cisfiles = gogetcisdata(startyear=sdate.year, startmonth=sdate.month, startday=sdate.day,
                                 storefunc=db.add_item_from_name)
-    print("Adding or Updating {0} CIS files".format(len(cisfiles)))
+    logging.info("Adding or Updating {0} CIS files".format(len(cisfiles)))
     # for cis in cisfiles:
     #     chart = IceChart.from_name(cis[0], cis[1])
     #     print(chart.epoch.isoformat())
@@ -120,10 +121,10 @@ def update_geometry(dbname, source='Any', region='Any', epoch1='Any', epoch2='An
     """ download and analyze the source files to get accurate geometry """
     db = StackDB(dbname)
     rows = db.get_items(source=source, region=region, epoch1=epoch1, epoch2=epoch2, exactgeo='False')
-    print("Getting exact geometry for {0} records".format(len(rows)))
+    # print("Getting exact geometry for {0} records".format(len(rows)))
     for row in rows:
         r = dict(row)
-        print(f"{r['name']}")
+        logging.info(f"Updating geometry for {r['name']}")
         r['stac'] = pystac.Item.from_dict(json.loads(r['stac']))
         chart = IceChart(dict(r))
         chart.exact_geometry()
@@ -139,13 +140,11 @@ def make_collection(dbs, source='NIC', region='arctic', year='All', root_href=''
     elif type(dbs) is StackDB:
         db = dbs
     else:
-        print('Please specify a database or database name')
+        logging.error('Please specify a database or database name')
         return
 
     cis = db.get_stac_items(source=source, region=region, year=year)
-    if len(cis) < 1:
-        print('No data found for source {0}, region {1}, year {2}'.format(source, region, year))
-        return
+    count = 0
     stacs = []
     spatial_extent = []
     mindate = datetime.datetime.now()
@@ -154,12 +153,17 @@ def make_collection(dbs, source='NIC', region='arctic', year='All', root_href=''
     mindate = mindate.replace(tzinfo=pytz.UTC)
     maxdate = maxdate.replace(tzinfo=pytz.UTC)
     for cs in cis:
+        count += 1
         stac = pystac.stac_object_from_dict(json.loads(cs[0]))
         stacs.append(stac)
 
         mindate = stac.datetime if stac.datetime < mindate else mindate
         maxdate = stac.datetime if stac.datetime > maxdate else maxdate
         spatial_extent = biggest_bbox(spatial_extent, stac.bbox)
+
+    if count < 1:
+        logging.warning('No data found for source {0}, region {1}, year {2}'.format(source, region, year))
+        return
 
     extent = pystac.Extent(spatial=pystac.pystac.SpatialExtent(bboxes=[spatial_extent]),
                            temporal=pystac.TemporalExtent([[mindate, maxdate]]))
@@ -178,7 +182,7 @@ def save_catalog(dbname=DBNAME, catalog_type='SELF_CONTAINED', root_href=''):
     summary = db.summary()
 
     if summary['Total Items'] < 1:
-        print('No data to save')
+        logging.warning('No data to save')
         db.close()
         return
 
@@ -191,19 +195,18 @@ def save_catalog(dbname=DBNAME, catalog_type='SELF_CONTAINED', root_href=''):
                              catalog_type=catalog_type, stac_extensions=["projection"])
     for source in summary['Sources']:
         # TODO - change configuration so there are only collections for each source, not source-year-region
-        # TODO - make sure id values written to catalogs and collections have spaces removed
-        print(source)
+        logging.info(source)
         sroot_href = '/'.join([root_href, source])
         srccat = pystac.Catalog(source + '-icecharts', 'Weekly icecharts from ' + source, catalog_type=catalog_type)
         for region in summary[source + ' Regions']:
-            print(region)
+            logging.info(region)
             rsroot_href = '/'.join([sroot_href, region])
             rgncat = pystac.Catalog('-'.join([source, region, 'icecharts']).replace(' ','')
                                     , 'Weekly icecharts for ' + region,
                                     catalog_type=catalog_type, stac_extensions=["projection"])
             for yr in range(summary['{0} {1} Date Range'.format(source, region)][0],
                             summary['{0} {1} Date Range'.format(source, region)][1]+1):
-                print(yr)
+                logging.info(yr)
                 yrsroot_href = '/'.join([rsroot_href, str(yr)])
                 collid = ''.join([source, region, str(yr), 'icecharts']).strip()
                 coll = make_collection(db, source, region, str(yr), yrsroot_href, collid, 'Icecharts from ' + source)
@@ -218,7 +221,7 @@ def save_catalog(dbname=DBNAME, catalog_type='SELF_CONTAINED', root_href=''):
 
 if __name__ == '__main__':
     arguments = docopt(__doc__, version='Catalog Ice Charts 1.0')
-    print(arguments)
+    logging.info(arguments)
 
     if arguments['report']:
         db = StackDB(arguments['-d'])
