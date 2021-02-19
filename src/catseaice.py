@@ -172,7 +172,7 @@ def make_catalog(dbs, source='NIC', region='arctic', year='2019',
 
 
 def make_collection(dbs, source='NIC', region='arctic', daterange=None, root_href='', stacid='',
-                    description='', collection_license='MIT'):
+                    description='', collection_license='proprietary'):
     """ create a collection of STAC items from the database
     """
     if type(dbs) is str:
@@ -215,6 +215,8 @@ def make_collection(dbs, source='NIC', region='arctic', daterange=None, root_hre
             count += 1
 
     logging.info(f"Added {count} yearly catalogs to collection for {source}{region}")
+    if count == 0:
+        return
 
     # tidy up the extents and references
     collection.update_extent_from_items()
@@ -240,26 +242,14 @@ def save_catalog(dbname=DBNAME, catalog_type='SELF_CONTAINED', root_href=''):
     catalog = pystac.Catalog('icecharts', 'Weekly Ice Charts from NIC and CIS',
                              catalog_type=catalog_type, stac_extensions=["projection"])
     for source in summary['Sources']:
-        # TODO - change configuration so there are only collections for each source, not source-year-region
         logging.info(source)
-        sroot_href = '/'.join([root_href, source])
-        srccat = pystac.Catalog(source + '-icecharts', 'Weekly icecharts from ' + source, catalog_type=catalog_type)
         for region in summary[source + ' Regions']:
             logging.info(region)
-            rsroot_href = '/'.join([sroot_href, region])
-            rgncat = pystac.Catalog('-'.join([source, region, 'icecharts']).replace(' ', '')
-                                    , 'Weekly icecharts for ' + region,
-                                    catalog_type=catalog_type, stac_extensions=["projection"])
-            for yr in range(summary['{0} {1} Date Range'.format(source, region)][0],
-                            summary['{0} {1} Date Range'.format(source, region)][1] + 1):
-                logging.info(yr)
-                yrsroot_href = '/'.join([rsroot_href, str(yr)])
-                collid = ''.join([source, region, str(yr), 'icecharts']).strip()
-                coll = make_collection(db, source, region, str(yr), yrsroot_href, collid, 'Icecharts from ' + source)
-                if coll:
-                    rgncat.add_child(coll, title=collid)
-            srccat.add_child(rgncat)
-        catalog.add_child(srccat)
+            rgnclct = make_collection(db, source=source, region=region,
+                                      daterange=summary[f'{source} {region} Date Range'])
+
+            if rgnclct:
+                catalog.add_child(rgnclct)
 
     catalog.normalize_and_save(root_href, catalog_type=catalog_type)
     db.close()
