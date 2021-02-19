@@ -30,9 +30,10 @@
 ###############################################################################
 
 import pytest
-import datetime
-from src.stackdb import StackDB
-from src.icechart import IceChart
+import pystac
+from stackdb import StackDB
+from icechart import IceChart
+from catseaice import make_catalog
 
 
 @pytest.fixture(scope='function')
@@ -86,52 +87,21 @@ def additems(createdb):
     yield db
 
 
-def test_getstacitems(additems):
+def test_make_catalog(additems):
     db = additems
-    result = db.get_stac_items(year=1973)
-    assert sum(1 for _ in result) == 1
-    result = db.get_stac_items(source='NIC')
-    assert sum(1 for _ in result) == 4
-    result = db.get_stac_items(region='antarctic')
-    assert sum(1 for _ in result) == 2
+    # print(type(db))
+    # print(isinstance(db, StackDB))
+    catalog = make_catalog(db, source='NIC', region='antarctic', year='2005')
+    assert type(catalog) == pystac.catalog.Catalog
+    catalog.normalize_hrefs('/test')
+    assert catalog.validate_all() is None
+    assert catalog.description == 'Weekly Ice Charts From NIC for the year 2005 over the antarctic region'
 
 
-def test_getitems(additems):
+def test_nomake_catalog(additems):
+    """ check that make_catalog fails if no charts match the filter """
     db = additems
-    result = db.get_items(source='NIC')
-    count = 0
-    for res in result:
-        assert dict(res)['source'] == 'NIC'
-        count += 1
-    assert count == 4
-
-    result = db.get_items(source='CIS')
-    count = 0
-    for res in result:
-        assert dict(res)['source'] == 'CIS'
-        count += 1
-    assert count == 4
-
-    result = db.get_items(source='UNK')
-    assert sum(1 for _ in result) == 0
-
-
-def test_summary(additems):
-    db = additems
-    summary = db.summary()
-    assert summary['CIS Count'] == 4
-    assert 2003 in summary['NIC Date Range']
-    assert 2020 in summary['CIS Eastern Arctic Date Range']
-    assert 'CIS' in summary['Sources']
-    assert 'NIC' in summary['Sources']
-    assert 'antarctic' in summary['NIC Regions']
-
-
-def test_getlast(additems):
-    db = additems
-    last = db.getlast(source='NIC')
-    assert type(last) is datetime.datetime
-    assert last == datetime.datetime(2017, 4, 13, 0, 0, 0)
-    last = db.getlast(source='CIS')
-    assert type(last) is datetime.datetime
-    assert last.year == 2020
+    # print(type(db))
+    # print(isinstance(db, StackDB))
+    catalog = make_catalog(db, source='CIS', region='Eastern Arctic', year='1999')
+    assert catalog is None

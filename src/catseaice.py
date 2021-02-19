@@ -132,18 +132,60 @@ def update_geometry(dbname, source='Any', region='Any', epoch1='Any', epoch2='An
     db.close()
 
 
+def make_catalog(dbs, source='NIC', region='arctic', year='2019',
+                 catalog_type='SELF_CONTAINED', stacid='', description=''):
+    """ create a STAC Catalog of items from the database
+    Intended for creating sub-catalogs specific to a source/region/year combo
+    returns the Catalog object or None on failure """
+    if type(dbs) is str:
+        db = StackDB(dbs)
+    elif isinstance(dbs, StackDB):
+        db = dbs
+    else:
+        logging.error(f'Please specify a database or database name {type(dbs)}')
+        return
+
+    # request all the records matching the filter params
+    cis = db.get_stac_items(source=source, region=region, year=year)
+
+    # create the catalog
+    if len(stacid) < 1:
+        stacid = ''.join([source, region, year]).replace(' ', '')
+    if len(description) < 1:
+        description = f'Weekly Ice Charts From {source} for the year {year} over the {region} region'
+    catalog = pystac.Catalog(id=stacid, description=description,
+                             catalog_type=catalog_type, stac_extensions=["projection"])
+
+    # now add all the items to the catalog
+    count = 0
+    for cs in cis:
+        count += 1
+        stac = pystac.stac_object_from_dict(json.loads(cs[0]))
+        catalog.add_item(stac)
+
+    if count == 0:
+        logging.warning(f'Database contains no entries for {source} {region} {year}')
+        return
+
+    logging.info(catalog.describe())
+    return catalog
+
+
 def make_collection(dbs, source='NIC', region='arctic', year='All', root_href='', stacid='',
                     description='', collection_license='MIT'):
-    """ create a collection of STAC items """
+    """ create a collection of STAC items from the database """
     if type(dbs) is str:
         db = StackDB(dbs)
     elif type(dbs) is StackDB:
         db = dbs
     else:
+        print(type(dbs))
         logging.error('Please specify a database or database name')
         return
 
+    # request all the records matching the filter params
     cis = db.get_stac_items(source=source, region=region, year=year)
+    # set up some bounds
     count = 0
     stacs = []
     spatial_extent = []
@@ -152,6 +194,7 @@ def make_collection(dbs, source='NIC', region='arctic', year='All', root_href=''
     # make the timestamp bounds offset aware so we can do comparisons
     mindate = mindate.replace(tzinfo=pytz.UTC)
     maxdate = maxdate.replace(tzinfo=pytz.UTC)
+    # iterate through the result and add the items to the collection while checking the bounds
     for cs in cis:
         count += 1
         stac = pystac.stac_object_from_dict(json.loads(cs[0]))
@@ -173,6 +216,7 @@ def make_collection(dbs, source='NIC', region='arctic', year='All', root_href=''
                                    license=collection_license)
     collection.add_items(stacs)
     collection.normalize_hrefs(root_href=root_href)
+    collection.update_extent_from_items()
     return collection
 
 
