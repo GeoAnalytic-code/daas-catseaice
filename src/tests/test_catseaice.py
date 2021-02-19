@@ -33,7 +33,7 @@ import pytest
 import pystac
 from stackdb import StackDB
 from icechart import IceChart
-from catseaice import make_catalog
+from catseaice import make_catalog, make_collection
 
 
 @pytest.fixture(scope='function')
@@ -89,8 +89,6 @@ def additems(createdb):
 
 def test_make_catalog(additems):
     db = additems
-    # print(type(db))
-    # print(isinstance(db, StackDB))
     catalog = make_catalog(db, source='NIC', region='antarctic', year='2005')
     assert type(catalog) == pystac.catalog.Catalog
     catalog.normalize_hrefs('/test')
@@ -101,7 +99,13 @@ def test_make_catalog(additems):
 def test_nomake_catalog(additems):
     """ check that make_catalog fails if no charts match the filter """
     db = additems
-    # print(type(db))
-    # print(isinstance(db, StackDB))
     catalog = make_catalog(db, source='CIS', region='Eastern Arctic', year='1999')
     assert catalog is None
+
+
+def test_make_collection(additems):
+    db = additems
+    collection = make_collection(db, source='CIS', region='Eastern Arctic')
+    assert type(collection) == pystac.collection.Collection
+    assert collection.validate_all() is None
+    assert collection.description == 'Weekly Ice Charts From CIS over the Eastern Arctic region'

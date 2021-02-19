@@ -80,7 +80,7 @@ def fill_database(dbname=DBNAME, startdate=STARTDATE, update=True, exactgeo=Fals
     if update:
         lastdate = db.getlast('NIC')
         if lastdate is not None:
-            nicfiles = gogetnicdata(startyear=lastdate.year, startmonth=lastdate.month, startday=lastdate.day+1)
+            nicfiles = gogetnicdata(startyear=lastdate.year, startmonth=lastdate.month, startday=lastdate.day + 1)
         else:
             nicfiles = gogetnicdata(startyear=sdate.year, startmonth=sdate.month, startday=sdate.day)
     else:
@@ -98,7 +98,7 @@ def fill_database(dbname=DBNAME, startdate=STARTDATE, update=True, exactgeo=Fals
     if update:
         lastdate = db.getlast('CIS')
         if lastdate is not None:
-            cisfiles = gogetcisdata(startyear=lastdate.year, startmonth=lastdate.month, startday=lastdate.day+1,
+            cisfiles = gogetcisdata(startyear=lastdate.year, startmonth=lastdate.month, startday=lastdate.day + 1,
                                     storefunc=db.add_item_from_name)
         else:
             cisfiles = gogetcisdata(startyear=sdate.year, startmonth=sdate.month, startday=sdate.day,
@@ -171,52 +171,54 @@ def make_catalog(dbs, source='NIC', region='arctic', year='2019',
     return catalog
 
 
-def make_collection(dbs, source='NIC', region='arctic', year='All', root_href='', stacid='',
+def make_collection(dbs, source='NIC', region='arctic', daterange=None, root_href='', stacid='',
                     description='', collection_license='MIT'):
-    """ create a collection of STAC items from the database """
+    """ create a collection of STAC items from the database
+    """
     if type(dbs) is str:
         db = StackDB(dbs)
-    elif type(dbs) is StackDB:
+    elif isinstance(dbs, StackDB):
         db = dbs
     else:
-        print(type(dbs))
-        logging.error('Please specify a database or database name')
+        logging.error(f'Please specify a database or database name {type(dbs)}')
         return
 
-    # request all the records matching the filter params
-    cis = db.get_stac_items(source=source, region=region, year=year)
-    # set up some bounds
-    count = 0
-    stacs = []
-    spatial_extent = []
-    mindate = datetime.datetime.now()
-    maxdate = datetime.datetime.min
-    # make the timestamp bounds offset aware so we can do comparisons
-    mindate = mindate.replace(tzinfo=pytz.UTC)
-    maxdate = maxdate.replace(tzinfo=pytz.UTC)
-    # iterate through the result and add the items to the collection while checking the bounds
-    for cs in cis:
-        count += 1
-        stac = pystac.stac_object_from_dict(json.loads(cs[0]))
-        stacs.append(stac)
+    # make sure we have a proper date range
+    if daterange is None:
+        daterange = [1968, 2021]
 
-        mindate = stac.datetime if stac.datetime < mindate else mindate
-        maxdate = stac.datetime if stac.datetime > maxdate else maxdate
-        spatial_extent = biggest_bbox(spatial_extent, stac.bbox)
+    # set up a dummy extent, this will be updated later
+    e_dict = {'spatial': {'bbox': [[-112.67872965304991,
+                                    62.64083386314862,
+                                    -21.96924552899297,
+                                    82.38096680323945]]},
+              'temporal': {'interval': [['2016-11-21T00:00:00Z', '2016-11-21T00:00:00Z']]}}
+    extent = pystac.Extent.from_dict(e_dict)
 
-    if count < 1:
-        logging.warning('No data found for source {0}, region {1}, year {2}'.format(source, region, year))
-        return
+    # create an empty collection
+    if len(stacid) < 1:
+        stacid = ''.join([source, region]).replace(' ', '')
+    if len(description) < 1:
+        description = f'Weekly Ice Charts From {source} over the {region} region'
 
-    extent = pystac.Extent(spatial=pystac.pystac.SpatialExtent(bboxes=[spatial_extent]),
-                           temporal=pystac.TemporalExtent([[mindate, maxdate]]))
     collection = pystac.Collection(id=stacid,
                                    description=description,
                                    extent=extent,
                                    license=collection_license)
-    collection.add_items(stacs)
-    collection.normalize_hrefs(root_href=root_href)
+
+    # create a catalog for each year and add to the collection
+    count = 0
+    for yr in range(daterange[0], daterange[1] + 1):
+        ctlg = make_catalog(dbs, source=source, region=region, year=str(yr))
+        if ctlg:
+            collection.add_child(ctlg)
+            count += 1
+
+    logging.info(f"Added {count} yearly catalogs to collection for {source}{region}")
+
+    # tidy up the extents and references
     collection.update_extent_from_items()
+    collection.normalize_hrefs(root_href=root_href)
     return collection
 
 
@@ -245,11 +247,11 @@ def save_catalog(dbname=DBNAME, catalog_type='SELF_CONTAINED', root_href=''):
         for region in summary[source + ' Regions']:
             logging.info(region)
             rsroot_href = '/'.join([sroot_href, region])
-            rgncat = pystac.Catalog('-'.join([source, region, 'icecharts']).replace(' ','')
+            rgncat = pystac.Catalog('-'.join([source, region, 'icecharts']).replace(' ', '')
                                     , 'Weekly icecharts for ' + region,
                                     catalog_type=catalog_type, stac_extensions=["projection"])
             for yr in range(summary['{0} {1} Date Range'.format(source, region)][0],
-                            summary['{0} {1} Date Range'.format(source, region)][1]+1):
+                            summary['{0} {1} Date Range'.format(source, region)][1] + 1):
                 logging.info(yr)
                 yrsroot_href = '/'.join([rsroot_href, str(yr)])
                 collid = ''.join([source, region, str(yr), 'icecharts']).strip()
