@@ -65,7 +65,6 @@ NIC_ARCTIC_STAC = {"stac_version": "1.0.0-beta.2",
                                     ]
                                 ]]},
                    "properties": {"datetime": "2020-10-26",
-                                  "collection": "NIC_Ice_Charts",
                                   "proj:epsg": None,
                                   "proj:wkt2": 'PROJCS["WGS_1984_Stereographic_North_Pole",GEOGCS["WGS 84",DATUM['
                                                '"WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG",'
@@ -128,7 +127,6 @@ NIC_ANTARCTIC_STAC = {"stac_version": "1.0.0-beta.2",
                                        ]
                                    ]]},
                       "properties": {"datetime": "2020-10-26",
-                                     "collection": "NIC_Ice_Charts",
                                      "proj:epsg": None,
                                      "proj:wkt2": 'PROJCS["WGS_1984_Stereographic_South_Pole",'
                                                   'GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",'
@@ -189,7 +187,6 @@ CIS_ARCTIC_STAC = {"stac_version": "1.0.0-beta.2",
                                     ]
                                 ]]},
                    "properties": {"datetime": "2020-10-26",
-                                  "collection": "CIS_Ice_Charts",
                                   "proj:epsg": None,
                                   "proj:wkt2": 'PROJCS["WGS_1984_Stereographic_North_Pole",GEOGCS["WGS 84",DATUM['
                                                '"WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG",'
@@ -216,7 +213,6 @@ CIS_HUDSONBAY_STAC = {"type": "Feature",
                       "id": "rgc_a09_20201221_CEXPRHB",
                       "properties": {
                           "datetime": "2020-12-21T00:00:00Z",
-                          "collection": "CIS_Ice_Charts",
                           "proj:epsg": None,
                           "proj:wkt2": "PROJCS[\"WGS_1984_Lambert_Conformal_Conic\",GEOGCS[\"WGS 84\","
                                        "DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,"
@@ -393,7 +389,6 @@ CIS_EASTERNARCTIC_STAC = {"type": "Feature",
                           "id": "rgc_a11_20201221_CEXPREA",
                           "properties": {
                               "datetime": "2020-12-21T00:00:00Z",
-                              "collection": "CIS_Ice_Charts",
                               "proj:epsg": None,
                               "proj:wkt2": "PROJCS[\"WGS_1984_Lambert_Conformal_Conic\",GEOGCS[\"WGS 84\","
                                            "DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,"
@@ -547,7 +542,6 @@ CIS_WESTERNARCTIC_STAC = {"type": "Feature",
                           "id": "rgc_a10_20201221_CEXPRWA",
                           "properties": {
                               "datetime": "2020-12-21T00:00:00Z",
-                              "collection": "CIS_Ice_Charts",
                               "proj:epsg": None,
                               "proj:wkt2": "PROJCS[\"WGS_1984_Lambert_Conformal_Conic\",GEOGCS[\"WGS 84\","
                                            "DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,"
@@ -781,7 +775,6 @@ CIS_EASTERNCOAST_STAC = {"type": "Feature",
                          "id": "rgc_a12_20201221_CEXPREC",
                          "properties": {
                              "datetime": "2020-12-21T00:00:00Z",
-                             "collection": "CIS_Ice_Charts",
                              "proj:epsg": None,
                              "proj:wkt2": "PROJCS[\"WGS_1984_Lambert_Conformal_Conic\",GEOGCS[\"WGS 84\","
                                           "DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY["
@@ -933,7 +926,6 @@ CIS_GREATLAKES_STAC = {"type": "Feature",
                        "id": "rgc_a13_20201221_CEXPRGL",
                        "properties": {
                            "datetime": "2020-12-21T00:00:00Z",
-                           "collection": "CIS_Ice_Charts",
                            "proj:epsg": None,
                            "proj:wkt2": "PROJCS[\"WGS_1984_Lambert_Conformal_Conic\",GEOGCS[\"WGS 84\","
                                         "DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,"

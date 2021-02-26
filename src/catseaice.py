@@ -133,7 +133,7 @@ def update_geometry(dbname, source='Any', region='Any', epoch1='Any', epoch2='An
 
 
 def make_catalog(dbs, source='NIC', region='arctic', year='2019',
-                 catalog_type='SELF_CONTAINED', stacid='', description=''):
+                 catalog_type='SELF_CONTAINED', stacid='', description='', collection=None):
     """ create a STAC Catalog of items from the database
     Intended for creating sub-catalogs specific to a source/region/year combo
     returns the Catalog object or None on failure """
@@ -161,6 +161,8 @@ def make_catalog(dbs, source='NIC', region='arctic', year='2019',
     for cs in cis:
         count += 1
         stac = pystac.stac_object_from_dict(json.loads(cs[0]))
+        if collection:
+            stac.set_collection(collection, pystac.link.LinkType.RELATIVE)
         catalog.add_item(stac)
 
     if count == 0:
@@ -209,7 +211,7 @@ def make_collection(dbs, source='NIC', region='arctic', daterange=None, root_hre
     # create a catalog for each year and add to the collection
     count = 0
     for yr in range(daterange[0], daterange[1] + 1):
-        ctlg = make_catalog(dbs, source=source, region=region, year=str(yr))
+        ctlg = make_catalog(dbs, source=source, region=region, year=str(yr), collection=collection)
         if ctlg:
             collection.add_child(ctlg)
             count += 1
